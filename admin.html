@@ -98,6 +98,24 @@
 
     </script>
 
+<script>
+
+    async function cerrarSesion() {
+
+        await fetch(
+            "/api/logout",
+            {
+                method: "POST"
+            }
+        );
+
+        window.location.href =
+            "/admin-login.html";
+
+    }
+
+</script>
+
 </body>
 
 </html>

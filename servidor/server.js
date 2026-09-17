@@ -1,7 +1,6 @@
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
 const session = require("express-session");
+const { Pool } = require("pg");
 require("dotenv").config();
 
 const app = express();
@@ -10,13 +9,15 @@ const PORT = process.env.PORT || 3000;
 
 
 // ==========================================
-// ARCHIVO DE PEDIDOS
+// CONEXIÓN A POSTGRESQL
 // ==========================================
 
-const archivoPedidos = path.join(
-    __dirname,
-    "pedidos.json"
-);
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+        rejectUnauthorized: false
+    }
+});
 
 
 // ==========================================
@@ -32,6 +33,7 @@ app.use(
         saveUninitialized: false,
         cookie: {
             httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
             maxAge: 1000 * 60 * 60 * 4
         }
     })
@@ -47,9 +49,7 @@ app.use((req, res, next) => {
     if (req.path === "/admin.html") {
 
         if (!req.session.usuario) {
-
             return res.redirect("/admin-login.html");
-
         }
 
     }
@@ -64,6 +64,28 @@ app.use((req, res, next) => {
 // ==========================================
 
 app.use(express.static("../"));
+
+
+// ==========================================
+// CREAR TABLA DE PEDIDOS
+// ==========================================
+
+async function crearTablaPedidos() {
+
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS pedidos (
+            id SERIAL PRIMARY KEY,
+            cliente JSONB NOT NULL,
+            productos JSONB NOT NULL,
+            total NUMERIC NOT NULL,
+            estado VARCHAR(50) NOT NULL,
+            fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
+    console.log("Tabla de pedidos lista.");
+
+}
 
 
 // ==========================================
@@ -89,14 +111,12 @@ app.post("/api/login", (req, res) => {
     const usuario = req.body.usuario;
     const password = req.body.password;
 
-
     if (
         usuario === process.env.ADMIN_USER &&
         password === process.env.ADMIN_PASSWORD
     ) {
 
         req.session.usuario = usuario;
-
 
         return res.json({
 
@@ -108,7 +128,6 @@ app.post("/api/login", (req, res) => {
         });
 
     }
-
 
     res.status(401).json({
 
@@ -141,7 +160,6 @@ app.post("/api/logout", (req, res) => {
 
         }
 
-
         res.json({
 
             mensaje:
@@ -158,7 +176,7 @@ app.post("/api/logout", (req, res) => {
 // OBTENER PEDIDOS
 // ==========================================
 
-app.get("/api/pedidos", (req, res) => {
+app.get("/api/pedidos", async (req, res) => {
 
     // Solo administradores
 
@@ -173,15 +191,36 @@ app.get("/api/pedidos", (req, res) => {
 
     }
 
-
     try {
 
-        const datos = fs.readFileSync(
-            archivoPedidos,
-            "utf8"
-        );
+        const resultado = await pool.query(`
+            SELECT
+                id,
+                cliente,
+                productos,
+                total,
+                estado,
+                fecha
+            FROM pedidos
+            ORDER BY id ASC
+        `);
 
-        const pedidos = JSON.parse(datos);
+        const pedidos = resultado.rows.map(pedido => ({
+
+            id: pedido.id,
+
+            cliente: pedido.cliente,
+
+            productos: pedido.productos,
+
+            total: Number(pedido.total),
+
+            estado: pedido.estado,
+
+            fecha: new Date(pedido.fecha)
+                .toLocaleString("es-CO")
+
+        }));
 
         res.json(pedidos);
 
@@ -205,58 +244,54 @@ app.get("/api/pedidos", (req, res) => {
 // GUARDAR PEDIDO
 // ==========================================
 
-app.post("/api/pedidos", (req, res) => {
+app.post("/api/pedidos", async (req, res) => {
 
     try {
 
         const nuevoPedido = req.body;
 
+        const cliente = nuevoPedido.cliente;
 
-        let pedidos = [];
+        const productos = nuevoPedido.productos;
 
-        try {
+        const total = nuevoPedido.total;
 
-            const datos =
-                fs.readFileSync(
-                    archivoPedidos,
-                    "utf8"
-                );
-
-            pedidos = JSON.parse(datos);
-
-        } catch (error) {
-
-            pedidos = [];
-
-        }
+        const estado = "Pendiente";
 
 
-        nuevoPedido.id =
-            pedidos.length + 1;
+        const resultado = await pool.query(`
+            INSERT INTO pedidos
+                (cliente, productos, total, estado)
+            VALUES
+                ($1, $2, $3, $4)
+            RETURNING id, cliente, productos, total, estado, fecha
+        `, [
+            cliente,
+            JSON.stringify(productos),
+            total,
+            estado
+        ]);
 
 
-        nuevoPedido.estado =
-            "Pendiente";
+        const pedido = resultado.rows[0];
 
 
-        nuevoPedido.fecha =
-            new Date().toLocaleString("es-CO");
+        const pedidoRespuesta = {
 
+            id: pedido.id,
 
-        pedidos.push(nuevoPedido);
+            cliente: pedido.cliente,
 
+            productos: pedido.productos,
 
-        fs.writeFileSync(
+            total: Number(pedido.total),
 
-            archivoPedidos,
+            estado: pedido.estado,
 
-            JSON.stringify(
-                pedidos,
-                null,
-                4
-            )
+            fecha: new Date(pedido.fecha)
+                .toLocaleString("es-CO")
 
-        );
+        };
 
 
         res.json({
@@ -265,7 +300,7 @@ app.post("/api/pedidos", (req, res) => {
                 "Pedido guardado correctamente",
 
             pedido:
-                nuevoPedido
+                pedidoRespuesta
 
         });
 
@@ -290,7 +325,7 @@ app.post("/api/pedidos", (req, res) => {
 // CAMBIAR ESTADO DEL PEDIDO
 // ==========================================
 
-app.put("/api/pedidos/:id/estado", (req, res) => {
+app.put("/api/pedidos/:id/estado", async (req, res) => {
 
     // Solo administradores
 
@@ -304,7 +339,6 @@ app.put("/api/pedidos/:id/estado", (req, res) => {
         });
 
     }
-
 
     try {
 
@@ -344,24 +378,18 @@ app.put("/api/pedidos/:id/estado", (req, res) => {
         }
 
 
-        const datos =
-            fs.readFileSync(
-                archivoPedidos,
-                "utf8"
-            );
+        const resultado = await pool.query(`
+            UPDATE pedidos
+            SET estado = $1
+            WHERE id = $2
+            RETURNING id, cliente, productos, total, estado, fecha
+        `, [
+            nuevoEstado,
+            id
+        ]);
 
 
-        const pedidos =
-            JSON.parse(datos);
-
-
-        const pedido =
-            pedidos.find(
-                item => item.id === id
-            );
-
-
-        if (!pedido) {
+        if (resultado.rows.length === 0) {
 
             return res.status(404).json({
 
@@ -373,21 +401,26 @@ app.put("/api/pedidos/:id/estado", (req, res) => {
         }
 
 
-        pedido.estado =
-            nuevoEstado;
+        const pedido =
+            resultado.rows[0];
 
 
-        fs.writeFileSync(
+        const pedidoRespuesta = {
 
-            archivoPedidos,
+            id: pedido.id,
 
-            JSON.stringify(
-                pedidos,
-                null,
-                4
-            )
+            cliente: pedido.cliente,
 
-        );
+            productos: pedido.productos,
+
+            total: Number(pedido.total),
+
+            estado: pedido.estado,
+
+            fecha: new Date(pedido.fecha)
+                .toLocaleString("es-CO")
+
+        };
 
 
         res.json({
@@ -396,7 +429,7 @@ app.put("/api/pedidos/:id/estado", (req, res) => {
                 "Estado actualizado correctamente",
 
             pedido:
-                pedido
+                pedidoRespuesta
 
         });
 
@@ -421,10 +454,30 @@ app.put("/api/pedidos/:id/estado", (req, res) => {
 // INICIAR SERVIDOR
 // ==========================================
 
-app.listen(PORT, "0.0.0.0", () => {
+async function iniciarServidor() {
 
-    console.log(
-        `Servidor BurguerTech funcionando en http://localhost:${PORT}`
-    );
+    try {
 
-});
+        await crearTablaPedidos();
+
+        app.listen(PORT, "0.0.0.0", () => {
+
+            console.log(
+                `Servidor BurguerTech funcionando en http://localhost:${PORT}`
+            );
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "No se pudo conectar con PostgreSQL:",
+            error
+        );
+
+    }
+
+}
+
+
+iniciarServidor();

@@ -1,0 +1,58 @@
+[
+    {
+        "cliente": {
+            "nombre": "Daniel Aponte Rosas",
+            "telefono": "3185671288",
+            "direccion": "Carrera 42 #18-33",
+            "observaciones": "A primera hora del día."
+        },
+        "productos": [
+            {
+                "producto": "res",
+                "nombre": "Carne de res",
+                "pack": "2",
+                "precio": 7000,
+                "cantidad": 1
+            },
+            {
+                "producto": "cerdo",
+                "nombre": "Carne de cerdo",
+                "pack": "2",
+                "precio": 7000,
+                "cantidad": 1
+            }
+        ],
+        "total": 14000,
+        "id": 1,
+        "fecha": "16/9/2026, 7:17:29 p. m.",
+        "estado": "Entregado"
+    },
+    {
+        "cliente": {
+            "nombre": "adasd",
+            "telefono": "gagdg",
+            "direccion": "dfasfds",
+            "observaciones": "asgasg"
+        },
+        "productos": [
+            {
+                "producto": "res",
+                "nombre": "Carne de res",
+                "pack": "2",
+                "precio": 7000,
+                "cantidad": 1
+            },
+            {
+                "producto": "cerdo",
+                "nombre": "Carne de cerdo",
+                "pack": "2",
+                "precio": 7000,
+                "cantidad": 1
+            }
+        ],
+        "total": 14000,
+        "id": 2,
+        "fecha": "16/9/2026, 7:28:07 p. m.",
+        "estado": "Entregado"
+    }
+]

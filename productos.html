@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Productos | BurguerTech</title>
+
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+
+<body>
+
+    <!-- ENCABEZADO -->
+
+    <header>
+
+        <div class="logo">
+            BurguerTech
+        </div>
+
+        <nav>
+            <a href="index.html">
+        Inicio
+    </a>
+
+    <a href="productos.html">
+        Productos
+    </a>
+
+    <a href="pedidos.html">
+        Mi pedido
+    </a>
+
+    <a href="#contacto">
+        Contacto
+    </a>
+        </nav>
+
+    </header>
+
+
+    <!-- PRODUCTOS -->
+
+    <main>
+
+        <section class="productos">
+
+            <h1>Nuestros productos</h1>
+
+            <p class="descripcion-productos">
+                Elige el tipo de medallón y la presentación que prefieras.
+            </p>
+
+
+            <div class="contenedor-productos">
+
+
+                <!-- CARNE DE RES -->
+
+                <div class="producto">
+
+                    <div class="imagen-producto">
+
+                        <img
+                            src="img/res.png"
+                            alt="Medallón de carne de res">
+
+                    </div>
+
+                    <h2>Carne de res</h2>
+
+                    <p>
+                        Medallón elaborado con carne de res
+                        seleccionada.
+                    </p>
+
+                    <label for="pack-res">
+                        Presentación:
+                    </label>
+
+                    <select id="pack-res">
+
+                        <option value="2">
+                            Pack x2 — 200 g
+                        </option>
+
+                        <option value="4">
+                            Pack x4 — 400 g
+                        </option>
+
+                        <option value="6">
+                            Pack x6 — 600 g
+                        </option>
+
+                        <option value="8">
+                            Pack x8 — 800 g
+                        </option>
+
+                    </select>
+
+                    <p class="precio" id="precio-res">
+                        Precio por definir
+                    </p>
+
+                    <button onclick="agregarAlCarrito('res')">
+                        Agregar al pedido
+                    </button>
+
+                </div>
+
+
+                <!-- CARNE DE CERDO -->
+
+                <div class="producto">
+
+                    <div class="imagen-producto">
+
+                        <img
+                            src="img/cerdo.png"
+                            alt="Medallón de carne de cerdo">
+
+                    </div>
+
+                    <h2>Carne de cerdo</h2>
+
+                    <p>
+                        Medallón elaborado con carne de cerdo
+                        seleccionada.
+                    </p>
+
+                    <label for="pack-cerdo">
+                        Presentación:
+                    </label>
+
+                    <select id="pack-cerdo">
+
+                        <option value="2">
+                            Pack x2 — 200 g
+                        </option>
+
+                        <option value="4">
+                            Pack x4 — 400 g
+                        </option>
+
+                        <option value="6">
+                            Pack x6 — 600 g
+                        </option>
+
+                        <option value="8">
+                            Pack x8 — 800 g
+                        </option>
+
+                    </select>
+
+                    <p class="precio" id="precio-cerdo">
+                        Precio por definir
+                    </p>
+
+                    <button onclick="agregarAlCarrito('cerdo')">
+                        Agregar al pedido
+                    </button>
+
+                </div>
+
+
+                <!-- MEDALLÓN MIXTO -->
+
+                <div class="producto">
+
+                    <div class="imagen-producto">
+
+                        <img
+                            src="img/mixto.png"
+                            alt="Medallón mixto de res y cerdo">
+
+                    </div>
+
+                    <h2>Medallón mixto</h2>
+
+                    <p>
+                        Combinación de carne de res y
+                        carne de cerdo.
+                    </p>
+
+                    <label for="pack-mixto">
+                        Presentación:
+                    </label>
+
+                    <select id="pack-mixto">
+
+                        <option value="2">
+                            Pack x2 — 200 g
+                        </option>
+
+                        <option value="4">
+                            Pack x4 — 400 g
+                        </option>
+
+                        <option value="6">
+                            Pack x6 — 600 g
+                        </option>
+
+                        <option value="8">
+                            Pack x8 — 800 g
+                        </option>
+
+                    </select>
+
+                    <p class="precio" id="precio-mixto">
+                        Precio por definir
+                    </p>
+
+                    <button onclick="agregarAlCarrito('mixto')">
+                        Agregar al pedido
+                    </button>
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- PIE DE PÁGINA -->
+
+    <footer>
+
+        <p>
+            © 2026 BurguerTech
+        </p>
+
+    </footer>
+
+
+    <!-- JAVASCRIPT -->
+
+    <script src="js/script.js"></script>
+
+</body>
+
+</html>

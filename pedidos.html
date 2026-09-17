@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Mi pedido | BurguerTech</title>
+
+    <link rel="stylesheet"
+          href="css/estilos.css">
+
+</head>
+
+<body>
+
+
+    <!-- ENCABEZADO -->
+
+    <header>
+
+        <div class="logo">
+            BurguerTech
+        </div>
+
+        <nav>
+
+            <a href="index.html">
+        Inicio
+    </a>
+
+    <a href="productos.html">
+        Productos
+    </a>
+
+    <a href="pedidos.html">
+        Mi pedido
+    </a>
+
+    <a href="#contacto">
+        Contacto
+    </a>
+
+        </nav>
+
+    </header>
+
+
+    <!-- PEDIDO -->
+
+    <main>
+
+        <section class="pedido">
+
+            <h1>
+                Mi pedido
+            </h1>
+
+            <div id="lista-pedido"></div>
+
+            <div class="total-pedido">
+
+    <h2>
+        Total:
+        <span id="total">
+            $0
+        </span>
+    </h2>
+
+    <button onclick="vaciarCarrito()">
+        Vaciar pedido
+    </button>
+
+</div>
+
+
+<!-- DATOS DEL CLIENTE -->
+
+<section class="datos-cliente">
+
+    <h2>
+        Datos del cliente
+    </h2>
+
+    <form id="formulario-pedido">
+
+        <label for="nombre">
+            Nombre completo
+        </label>
+
+        <input
+            type="text"
+            id="nombre"
+            placeholder="Escribe tu nombre"
+            required
+        >
+
+
+        <label for="telefono">
+            Teléfono
+        </label>
+
+        <input
+            type="tel"
+            id="telefono"
+            placeholder="Ejemplo: 3001234567"
+            required
+        >
+
+
+        <label for="direccion">
+            Dirección
+        </label>
+
+        <input
+            type="text"
+            id="direccion"
+            placeholder="Dirección de entrega"
+            required
+        >
+
+
+        <label for="observaciones">
+            Observaciones
+        </label>
+
+        <textarea
+            id="observaciones"
+            placeholder="Información adicional del pedido"
+            rows="4"
+        ></textarea>
+
+
+        <button type="submit">
+            Confirmar pedido
+        </button>
+
+    </form>
+
+</section>
+    </main>
+
+
+    <!-- PIE DE PÁGINA -->
+
+    <footer>
+
+        <p>
+            © 2026 BurguerTech
+        </p>
+
+    </footer>
+
+
+    <script src="js/script.js"></script>
+
+    <script>
+
+        mostrarCarrito();
+
+    </script>
+
+</body>
+
+</html>

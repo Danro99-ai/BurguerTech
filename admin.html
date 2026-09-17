@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Panel administrativo | BurguerTech</title>
+
+    <link rel="stylesheet"
+          href="css/estilos.css">
+
+</head>
+
+<body>
+
+    <!-- ENCABEZADO -->
+
+    <header>
+
+        <div class="logo">
+            BurguerTech
+        </div>
+
+        <nav>
+
+           <a href="index.html">
+        Inicio
+    </a>
+
+    <a href="productos.html">
+        Productos
+    </a>
+
+    <a href="pedidos.html">
+        Mi pedido
+    </a>
+
+    <a href="#"
+       onclick="cerrarSesion()">
+        Cerrar sesión
+    </a>
+        </nav>
+
+    </header>
+
+
+    <!-- PANEL ADMINISTRATIVO -->
+
+    <main>
+
+        <section class="panel-admin">
+
+            <h1>
+                Panel administrativo
+            </h1>
+
+            <p class="subtitulo-admin">
+                Pedidos recibidos de los clientes
+            </p>
+
+
+            <!-- CONTENEDOR DE PEDIDOS -->
+
+            <div id="lista-admin">
+
+                <p>
+                    Cargando pedidos...
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- PIE DE PÁGINA -->
+
+    <footer>
+
+        <p>
+            © 2026 BurguerTech
+        </p>
+
+    </footer>
+
+
+    <script src="js/script.js"></script>
+
+
+    <script>
+
+        cargarPedidosAdmin();
+
+    </script>
+
+</body>
+
+</html>

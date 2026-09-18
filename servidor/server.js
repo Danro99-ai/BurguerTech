@@ -7,6 +7,8 @@ const app = express();
 
 const PORT = process.env.PORT || 3000;
 
+app.set("trust proxy", 1);
+
 
 // ==========================================
 // CONEXIÓN A POSTGRESQL
@@ -32,10 +34,10 @@ app.use(
         resave: false,
         saveUninitialized: false,
         cookie: {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            maxAge: 1000 * 60 * 60 * 4
-        }
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 1000 * 60 * 60 * 4
+}
     })
 );
 

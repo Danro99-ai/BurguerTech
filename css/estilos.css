@@ -1016,3 +1016,73 @@ footer p {
     height: auto;
     margin-bottom: 10px;
 }
+/* ==========================================
+   SECCIÓN DE CONTACTO
+========================================== */
+
+.contacto {
+    text-align: center;
+    padding: 60px 20px;
+    background-color: #f5f5f5;
+}
+
+.contacto h2 {
+    font-size: 32px;
+    margin-bottom: 20px;
+}
+
+.contacto p {
+    font-size: 18px;
+    margin: 10px 0;
+}
+.redes-sociales {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    margin: 20px 0;
+}
+
+.redes-sociales a {
+    font-size: 40px;
+    color: #222;
+    text-decoration: none;
+}
+
+.redes-sociales a:hover {
+    color: #d62828;
+}
+.porque-elegirnos {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.porque-elegirnos h2 {
+    font-size: 36px;
+    margin-bottom: 35px;
+}
+
+.beneficios {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.beneficio {
+    flex: 1;
+    padding: 30px;
+    background-color: #f5f5f5;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.beneficio h3 {
+    font-size: 24px;
+    margin-bottom: 15px;
+}
+
+.beneficio p {
+    font-size: 16px;
+    line-height: 1.6;
+}

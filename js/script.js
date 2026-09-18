@@ -793,3 +793,46 @@ async function cambiarEstado(id, estado) {
     }
 
 }
+// ==========================================
+// COMPROBAR SESIÓN DEL ADMINISTRADOR
+// ==========================================
+
+async function comprobarSesion() {
+
+    try {
+
+        const respuesta = await fetch("/api/sesion");
+
+        const datos = await respuesta.json();
+
+        const enlacesAdmin =
+            document.querySelectorAll(".enlace-login");
+
+        enlacesAdmin.forEach(enlace => {
+
+            if (datos.sesion) {
+
+                enlace.textContent = "Panel administrativo";
+                enlace.href = "admin.html";
+
+            } else {
+
+                enlace.textContent = "Iniciar sesión";
+                enlace.href = "admin-login.html";
+
+            }
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "No se pudo comprobar la sesión:",
+            error
+        );
+
+    }
+
+}
+
+comprobarSesion();

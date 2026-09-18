@@ -87,7 +87,26 @@ async function crearTablaPedidos() {
 
 }
 
+// ==========================================
+// COMPROBAR SESIÓN
+// ==========================================
 
+app.get("/api/sesion", (req, res) => {
+
+    if (req.session.usuario) {
+
+        return res.json({
+            sesion: true,
+            usuario: req.session.usuario
+        });
+
+    }
+
+    res.json({
+        sesion: false
+    });
+
+});
 // ==========================================
 // RUTA DE PRUEBA
 // ==========================================

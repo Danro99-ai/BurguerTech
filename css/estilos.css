@@ -1086,3 +1086,1323 @@ footer p {
     font-size: 16px;
     line-height: 1.6;
 }
+/* ==========================================
+   INVENTARIO ADMINISTRATIVO
+   ========================================== */
+
+.inventario-admin {
+    max-width: 1000px;
+    margin: 50px auto;
+    padding: 30px;
+}
+
+.inventario-admin h2 {
+    text-align: center;
+    font-size: 32px;
+    margin-bottom: 30px;
+}
+
+#lista-inventario {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.materia-prima {
+    background-color: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.materia-prima h3 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 20px;
+}
+
+.materia-prima p {
+    margin: 6px 0;
+}
+
+.inventario-disponible,
+.inventario-alerta {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: bold;
+}
+
+.inventario-disponible {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.inventario-alerta {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.reponer-inventario {
+    display: flex;
+    gap: 8px;
+    margin-top: 15px;
+}
+
+.reponer-inventario input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+.reponer-inventario button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 6px;
+    background-color: #d62828;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.reponer-inventario button:hover {
+    background-color: #b71c1c;
+}
+
+
+/* Adaptación para pantallas pequeñas */
+
+@media (max-width: 800px) {
+
+    #lista-inventario {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+}
+
+@media (max-width: 550px) {
+
+    #lista-inventario {
+        grid-template-columns: 1fr;
+    }
+
+}
+/* ==========================================
+   CONTROL DE REFRIGERACIÓN
+   ========================================== */
+
+.refrigeracion-admin {
+    max-width: 1000px;
+    margin: 50px auto;
+    padding: 30px;
+}
+
+.refrigeracion-admin h2 {
+    text-align: center;
+    font-size: 32px;
+    margin-bottom: 30px;
+}
+
+#estado-refrigeracion {
+    text-align: center;
+}
+
+.temperatura-refrigeracion {
+    background-color: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.temperatura-refrigeracion h3 {
+    margin-top: 0;
+    font-size: 22px;
+}
+
+.temperatura-valor {
+    font-size: 48px;
+    font-weight: bold;
+    margin: 20px 0;
+}
+
+.refrigeracion-normal,
+.refrigeracion-alerta {
+    display: inline-block;
+    margin: 15px 0;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-weight: bold;
+}
+
+.refrigeracion-normal {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.refrigeracion-alerta {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+.controles-temperatura {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.controles-temperatura button {
+    padding: 15px 35px;
+    border: none;
+    border-radius: 8px;
+    background-color: #d62828;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.controles-temperatura button:hover {
+    background-color: #b71c1c;
+}
+/* ==========================================
+   PROCESO DE PRODUCCIÓN
+========================================== */
+
+.proceso-produccion {
+    max-width: 1000px;
+    margin: 50px auto;
+    padding: 30px;
+    background: #f5f5f5;
+    border-radius: 15px;
+}
+
+.proceso-encabezado {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.proceso-encabezado h2 {
+    font-size: 30px;
+    margin-bottom: 8px;
+}
+
+.proceso-encabezado p {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* Línea de etapas */
+
+.proceso-etapas {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    position: relative;
+    margin: 40px 0;
+}
+
+/* Línea horizontal */
+
+.proceso-etapas::before {
+    content: "";
+    position: absolute;
+    top: 25px;
+    left: 6%;
+    right: 6%;
+    height: 4px;
+    background: #ccc;
+    z-index: 0;
+}
+
+/* Cada etapa */
+
+.etapa-proceso {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    width: 14%;
+}
+
+/* Número */
+
+.etapa-proceso span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 50px;
+    height: 50px;
+
+    margin: 0 auto 10px;
+
+    border-radius: 50%;
+
+    background: #ccc;
+    color: #555;
+
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* Nombre */
+
+.etapa-proceso p {
+    margin: 0;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* Etapa activa */
+
+.etapa-proceso.activa span {
+    background: #d62828;
+    color: white;
+}
+
+.etapa-proceso.activa p {
+    color: #d62828;
+}
+
+/* Área de animación */
+
+.animacion-proceso {
+    background: white;
+    padding: 30px;
+    margin-top: 30px;
+    border-radius: 12px;
+    text-align: center;
+    min-height: 140px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+
+.animacion-proceso h3 {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.animacion-proceso p {
+    font-size: 16px;
+}
+
+/* Botón */
+
+.controles-proceso {
+
+    display: block;
+
+    width: 100%;
+
+    text-align: center;
+
+    margin-top: 25px;
+
+}
+
+.controles-proceso button {
+
+    display: inline-block;
+
+    padding: 14px 30px;
+
+    border: none;
+
+    border-radius: 8px;
+
+    background: #d62828;
+
+    color: white;
+
+    font-size: 16px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+}
+
+.controles-proceso button:hover {
+
+    background: #b71c1c;
+
+}
+/* ==========================================
+   MÁQUINA DE MOLIDO
+========================================== */
+
+.maquina-molino {
+    width: 300px;
+    margin: 20px auto;
+    position: relative;
+}
+
+.tolva {
+    width: 120px;
+    height: 70px;
+    margin: auto;
+    background: #777;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    clip-path: polygon(10% 0, 90% 0, 70% 100%, 30% 100%);
+}
+
+.cuerpo-molino {
+    width: 220px;
+    height: 90px;
+    margin: auto;
+    background: #555;
+    border-radius: 10px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tornillo {
+    font-size: 55px;
+    color: white;
+    animation: girarMolino 1s linear infinite;
+}
+
+@keyframes girarMolino {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.salida {
+    position: absolute;
+    right: -35px;
+    bottom: 15px;
+    display: flex;
+    gap: 5px;
+}
+
+.salida span {
+    width: 10px;
+    height: 25px;
+    background: #d62828;
+    border-radius: 5px;
+    animation: salirCarne 1s infinite;
+}
+
+.salida span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.salida span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes salirCarne {
+    0% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateX(25px);
+        opacity: 0;
+    }
+}
+/* ==========================================
+   MÁQUINA DE MEZCLADO
+========================================== */
+
+.maquina-mezcladora {
+    width: 300px;
+    height: 180px;
+    margin: 20px auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.recipiente-mezcla {
+    width: 230px;
+    height: 130px;
+    background: #777;
+    border-radius: 15px 15px 40px 40px;
+    position: relative;
+    overflow: hidden;
+}
+
+.mezcla {
+    position: absolute;
+    bottom: 0;
+    left: 15px;
+    width: 200px;
+    height: 65px;
+    background: #b5651d;
+    border-radius: 50% 50% 20px 20px;
+}
+
+.agitador {
+    position: absolute;
+    top: 25px;
+    left: 90px;
+    width: 50px;
+    height: 50px;
+    color: white;
+    font-size: 45px;
+    animation: girarMezcladora 1.2s linear infinite;
+}
+
+@keyframes girarMezcladora {
+
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+
+}
+/* ==========================================
+   MÁQUINA FORMADORA
+========================================== */
+
+.maquina-formadora {
+    width: 300px;
+    height: 190px;
+    margin: 20px auto;
+    position: relative;
+}
+
+.tolva-formadora {
+    position: absolute;
+    top: 0;
+    left: 90px;
+    width: 120px;
+    height: 55px;
+    background: #777;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    clip-path: polygon(10% 0, 90% 0, 70% 100%, 30% 100%);
+}
+
+.prensa {
+    position: absolute;
+    top: 55px;
+    left: 110px;
+    width: 80px;
+    height: 70px;
+    background: #555;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+}
+
+.placa-prensa {
+    width: 65px;
+    height: 15px;
+    background: #333;
+    position: absolute;
+    bottom: 8px;
+    border-radius: 5px;
+
+    animation: prensarMedallon 1.5s ease-in-out infinite;
+}
+
+.medallon-formado {
+    position: absolute;
+    bottom: 15px;
+    left: 105px;
+    width: 90px;
+    height: 22px;
+    background: #b5651d;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+
+    animation: aparecerMedallon 1.5s ease-in-out infinite;
+}
+
+@keyframes prensarMedallon {
+
+    0%, 100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(18px);
+    }
+
+}
+
+@keyframes aparecerMedallon {
+
+    0%, 35% {
+        transform: scale(0.6);
+        opacity: 0.4;
+    }
+
+    60%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+}
+/* ==========================================
+   REFRIGERACIÓN DENTRO DEL PROCESO
+========================================== */
+
+#control-refrigeracion-proceso {
+    margin-top: 25px;
+}
+
+.refrigeracion-proceso {
+    margin: 25px auto 0;
+    padding: 20px;
+    max-width: 450px;
+    border-radius: 10px;
+    background: #f5f5f5;
+}
+
+.refrigeracion-proceso h4 {
+    margin: 0 0 12px;
+    font-size: 20px;
+}
+
+.refrigeracion-proceso p {
+    margin: 8px 0;
+}
+
+.temperatura-proceso {
+    font-size: 36px !important;
+    font-weight: bold;
+    margin: 15px 0 !important;
+}
+
+.refrigeracion-proceso.inactiva {
+    border: 2px solid #ddd;
+}
+
+.refrigeracion-proceso.activa {
+    border: 2px solid #ccc;
+}
+
+.refrigeracion-proceso .controles-temperatura {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.refrigeracion-proceso .controles-temperatura button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 7px;
+    background-color: #d62828;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.refrigeracion-proceso .controles-temperatura button:hover {
+    background-color: #b71c1c;
+}
+/* ==========================================
+   SISTEMA DE REFRIGERACIÓN
+========================================== */
+
+.maquina-refrigeracion {
+    width: 320px;
+    height: 190px;
+    margin: 20px auto;
+    position: relative;
+}
+
+.cuerpo-refrigerador {
+    width: 260px;
+    height: 150px;
+    background: #d9d9d9;
+    border: 6px solid #777;
+    border-radius: 12px;
+    margin: auto;
+    position: relative;
+    overflow: hidden;
+}
+
+.puerta-refrigerador {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    width: 45px;
+    height: 130px;
+    background: #aaa;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.puerta-refrigerador span {
+    font-size: 30px;
+}
+
+.medallon-frio {
+    position: absolute;
+    width: 70px;
+    height: 18px;
+    background: #b5651d;
+    border-radius: 50%;
+    color: white;
+    font-size: 9px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: movimientoFrio 2s ease-in-out infinite;
+}
+
+.medallon-1 {
+    left: 35px;
+    top: 35px;
+}
+
+.medallon-2 {
+    left: 35px;
+    top: 70px;
+    animation-delay: 0.4s;
+}
+
+.medallon-3 {
+    left: 35px;
+    top: 105px;
+    animation-delay: 0.8s;
+}
+
+.aire-frio {
+    margin-top: 8px;
+    font-size: 24px;
+    letter-spacing: 10px;
+    animation: aireFrio 1s ease-in-out infinite alternate;
+}
+
+@keyframes movimientoFrio {
+
+    0%, 100% {
+        transform: translateX(0);
+    }
+
+    50% {
+        transform: translateX(25px);
+    }
+
+}
+
+@keyframes aireFrio {
+
+    from {
+        opacity: 0.4;
+        transform: translateY(0);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(5px);
+    }
+
+}
+/* =========================
+   ANIMACIÓN DE EMPAQUE
+========================= */
+
+.maquina-empaque {
+    width: 360px;
+    height: 190px;
+    margin: 20px auto;
+    position: relative;
+}
+
+.banda-empaque {
+    position: absolute;
+    left: 10px;
+    bottom: 25px;
+    width: 210px;
+    height: 45px;
+    background: #777;
+    border-radius: 8px;
+    border: 4px solid #555;
+    overflow: hidden;
+}
+
+.medallon-empaque {
+    position: absolute;
+    width: 55px;
+    height: 16px;
+    background: #b5651d;
+    border-radius: 50%;
+    color: white;
+    font-size: 8px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: avanzarEmpaque 3s linear infinite;
+}
+
+.medallon-e1 {
+    left: -60px;
+    top: 10px;
+}
+
+.medallon-e2 {
+    left: -60px;
+    top: 10px;
+    animation-delay: 1s;
+}
+
+.medallon-e3 {
+    left: -60px;
+    top: 10px;
+    animation-delay: 2s;
+}
+
+.empaque-caja {
+    position: absolute;
+    right: 10px;
+    bottom: 15px;
+    width: 110px;
+    height: 90px;
+    background: #eeeeee;
+    border: 4px solid #777;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tapa-empaque {
+    position: absolute;
+    top: -12px;
+    left: 5px;
+    width: 100px;
+    height: 15px;
+    background: #cccccc;
+    border: 3px solid #777;
+    border-radius: 5px;
+}
+
+.interior-empaque {
+    font-size: 12px;
+    font-weight: bold;
+    color: #333;
+    text-align: center;
+}
+
+@keyframes avanzarEmpaque {
+
+    0% {
+        transform: translateX(0);
+    }
+
+    70% {
+        transform: translateX(145px);
+    }
+
+    100% {
+        transform: translateX(145px);
+        opacity: 0;
+    }
+
+}
+/* =========================
+   ANIMACIÓN DE ETIQUETADO
+========================= */
+
+.maquina-etiquetado {
+    width: 360px;
+    height: 210px;
+    margin: 20px auto;
+    position: relative;
+}
+
+.producto-etiquetado {
+    position: absolute;
+    left: 45px;
+    bottom: 25px;
+    width: 190px;
+    height: 100px;
+    background: #eeeeee;
+    border: 4px solid #777;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: moverProductoEtiqueta 3s ease-in-out infinite;
+}
+
+.empaque-final {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: #333;
+}
+
+.empaque-final strong {
+    font-size: 15px;
+}
+
+.etiqueta {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    width: 105px;
+    padding: 8px;
+    background: white;
+    border: 2px solid #d62828;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    font-size: 9px;
+    opacity: 0;
+    animation: colocarEtiqueta 3s ease-in-out infinite;
+}
+
+.etiqueta strong {
+    font-size: 12px;
+}
+
+.aplicador-etiqueta {
+    position: absolute;
+    right: 35px;
+    top: 15px;
+    width: 70px;
+    height: 100px;
+    background: #777;
+    border-radius: 8px;
+    color: white;
+    font-size: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@keyframes moverProductoEtiqueta {
+
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(20px);
+    }
+
+}
+
+@keyframes colocarEtiqueta {
+
+    0%, 35% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0);
+    }
+
+    50% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+
+    65%, 100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+}
+/* =========================
+   SVG - PROCESO DE MOLIDO
+========================= */
+
+.svg-molino {
+    width: 100%;
+    max-width: 520px;
+    height: auto;
+    display: block;
+    margin: 20px auto;
+}
+
+/* Tolva */
+.molino-tolva {
+    fill: #cfcfcf;
+    stroke: #666;
+    stroke-width: 5;
+}
+
+.molino-borde {
+    fill: #888;
+}
+
+/* Carne */
+.carne {
+    fill: #b5651d;
+    animation: caerCarne 2s ease-in infinite;
+}
+
+.carne-1 {
+    animation-delay: 0s;
+}
+
+.carne-2 {
+    animation-delay: .3s;
+}
+
+.carne-3 {
+    animation-delay: .6s;
+}
+
+.carne-4 {
+    animation-delay: .9s;
+}
+
+.carne-5 {
+    animation-delay: 1.2s;
+}
+
+@keyframes caerCarne {
+    0% {
+        transform: translateY(-15px);
+        opacity: 0;
+    }
+
+    25% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(45px);
+        opacity: 0;
+    }
+}
+
+/* Cuerpo del molino */
+.molino-cuerpo {
+    fill: #bdbdbd;
+    stroke: #666;
+    stroke-width: 5;
+}
+
+.molino-ventana {
+    fill: #555;
+    stroke: #444;
+    stroke-width: 3;
+}
+
+.engranaje::after {
+    content: "";
+}
+
+/* Salida */
+.salida-molino {
+    fill: #888;
+    stroke: #555;
+    stroke-width: 3;
+}
+
+/* Carne molida saliendo */
+.medallon-molido {
+    fill: #8f4d1c;
+    animation: salirCarne 2s linear infinite;
+}
+
+.medallon-m1 {
+    animation-delay: 0s;
+}
+
+.medallon-m2 {
+    animation-delay: .5s;
+}
+
+.medallon-m3 {
+    animation-delay: 1s;
+}
+
+@keyframes salirCarne {
+
+    0% {
+        transform: translateX(-10px);
+        opacity: 0;
+    }
+
+    30% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateX(35px);
+        opacity: 0;
+    }
+
+}
+
+/* Base */
+.molino-base {
+    fill: #777;
+}
+/* ============================= */
+/* ANIMACIÓN SVG - MEZCLADO */
+/* ============================= */
+
+.svg-mezcladora {
+    width: 100%;
+    max-width: 520px;
+    height: auto;
+    display: block;
+    margin: 20px auto;
+}
+
+.mezcladora-tapa {
+    fill: #888;
+    stroke: #555;
+    stroke-width: 5;
+}
+
+.mezcladora-recipiente {
+    fill: #bdbdbd;
+    stroke: #666;
+    stroke-width: 5;
+}
+
+.mezcla-svg {
+    fill: #8f4d1c;
+    stroke: #6d3815;
+    stroke-width: 3;
+}
+
+.ingrediente {
+    fill: #b5651d;
+    animation: moverIngrediente 2s ease-in-out infinite;
+}
+
+.ingrediente-1 {
+    animation-delay: 0s;
+}
+
+.ingrediente-2 {
+    animation-delay: .3s;
+}
+
+.ingrediente-3 {
+    animation-delay: .6s;
+}
+
+.ingrediente-4 {
+    animation-delay: .9s;
+}
+
+.ingrediente-5 {
+    animation-delay: 1.2s;
+}
+
+.agitador-svg {
+    transform-origin: 250px 145px;
+    animation: girarAgitador 2s linear infinite;
+}
+
+.eje-agitador {
+    fill: #777;
+    stroke: #333;
+    stroke-width: 3;
+}
+
+.paleta {
+    fill: #888;
+    stroke: #333;
+    stroke-width: 4;
+}
+
+.mezcladora-base {
+    fill: #777;
+}
+
+.pata-mezcladora {
+    fill: #666;
+}
+
+@keyframes girarAgitador {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes moverIngrediente {
+    0%, 100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(12px);
+    }
+}
+/* ------------------------------------------
+   SEGUIMIENTO DEL PEDIDO
+------------------------------------------ */
+
+.seguimiento-pedido {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 30px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+}
+
+.seguimiento-pedido h2 {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.seguimiento-pedido > p {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.formulario-seguimiento {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.formulario-seguimiento input {
+    flex: 1;
+    max-width: 350px;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 16px;
+}
+
+.formulario-seguimiento button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 6px;
+    background: #e00000;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.formulario-seguimiento button:hover {
+    background: #b80000;
+}
+
+.resultado-pedido {
+    margin-top: 25px;
+    padding: 20px;
+    border-radius: 10px;
+    background: #f5f5f5;
+}
+
+.resultado-pedido h3 {
+    margin-top: 0;
+}
+
+.resultado-pedido h4 {
+    margin-top: 25px;
+    margin-bottom: 15px;
+}
+
+/* PROGRESO DE PRODUCCIÓN */
+
+.progreso-produccion {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.item-proceso {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: #e9e9e9;
+    border-left: 5px solid #999;
+}
+
+.item-proceso span {
+    font-weight: 500;
+}
+
+.item-proceso strong {
+    font-size: 14px;
+}
+
+/* PROCESO COMPLETADO */
+
+.item-proceso.proceso-completado {
+    background: #dff5df;
+    border-left-color: #28a745;
+}
+
+.item-proceso.proceso-completado strong {
+    color: #218838;
+}
+
+/* PROCESO ACTUAL */
+
+.item-proceso.proceso-actual {
+    background: #fff3cd;
+    border-left-color: #f0ad00;
+}
+
+.item-proceso.proceso-actual strong {
+    color: #b07800;
+}
+
+/* ADAPTACIÓN PARA CELULAR */
+
+@media (max-width: 600px) {
+
+    .seguimiento-pedido {
+        margin: 25px 15px;
+        padding: 20px;
+    }
+
+    .formulario-seguimiento {
+        flex-direction: column;
+    }
+
+    .formulario-seguimiento input {
+        max-width: none;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .formulario-seguimiento button {
+        width: 100%;
+    }
+
+    .item-proceso {
+        padding: 10px;
+    }
+
+}

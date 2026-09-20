@@ -591,169 +591,217 @@ async function cargarPedidosAdmin() {
         }
 
 
-        // Separar pedidos entregados
-        const pedidosPendientes =
-            pedidos.filter(pedido => pedido.estado !== "Entregado");
+       // Separar pedidos que ya están autorizados para MES
+const pedidosMES =
+    pedidos.filter(pedido =>
+        pedido.estado === "Autorizado para MES" ||
+        pedido.estado === "En preparación" ||
+        pedido.estado === "Listo"
+    );
 
-        const pedidosEntregados =
-            pedidos.filter(pedido => pedido.estado === "Entregado");
+const pedidosEntregados =
+    pedidos.filter(pedido =>
+        pedido.estado === "Entregado"
+    );
 
 
-        // ==========================================
-        // PEDIDOS PENDIENTES
-        // ==========================================
+       // ==========================================
+// GESTIÓN DE PRODUCCIÓN - MES
+// ==========================================
 
-        if (pedidosPendientes.length === 0) {
+const contadorMES =
+    document.getElementById(
+        "pedidos-autorizados-mes"
+    );
 
-            contenedor.innerHTML = `
-                <p class="sin-pedidos">
-                    No hay pedidos pendientes.
-                </p>
+const pedidosAutorizados =
+    pedidos.filter(pedido =>
+        pedido.estado === "Autorizado para MES"
+    );
+
+if (contadorMES) {
+
+    contadorMES.textContent =
+        pedidosAutorizados.length;
+
+}
+
+
+if (pedidosMES.length === 0) {
+
+    contenedor.innerHTML = `
+        <p class="sin-pedidos">
+            No hay pedidos autorizados para MES.
+        </p>
+    `;
+
+} else {
+
+    pedidosMES.forEach(pedido => {
+
+        const tarjeta =
+            document.createElement("div");
+
+        tarjeta.className =
+            "pedido-admin";
+
+
+        let productosHTML = "";
+
+
+        pedido.productos.forEach(producto => {
+
+            const medallones =
+                Number(producto.pack) *
+                Number(producto.cantidad);
+
+            productosHTML += `
+
+                <div class="producto-admin">
+
+                    <strong>
+                        ${producto.nombre}
+                    </strong>
+
+                    <span>
+                        Pack x${producto.pack}
+                    </span>
+
+                    <span>
+                        ${medallones} medallones
+                    </span>
+
+                </div>
+
             `;
 
-        } else {
-
-            pedidosPendientes.forEach(pedido => {
-
-                const tarjeta =
-                    document.createElement("div");
-
-                tarjeta.className =
-                    "pedido-admin";
+        });
 
 
-                let productosHTML = "";
+        tarjeta.innerHTML = `
+
+            <div class="cabecera-pedido">
+
+                <h2>
+                    Pedido #${pedido.id}
+                </h2>
+
+                <span class="estado-pedido">
+                    ${pedido.estado}
+                </span>
+
+            </div>
 
 
-                pedido.productos.forEach(producto => {
+            <div class="datos-admin">
 
-                    productosHTML += `
+                <p>
+                    <strong>Cliente:</strong>
+                    ${pedido.cliente.nombre}
+                </p>
 
-                        <div class="producto-admin">
+                <p>
+                    <strong>Teléfono:</strong>
+                    ${pedido.cliente.telefono}
+                </p>
 
-                            <strong>
-                                ${producto.nombre}
-                            </strong>
+                <p>
+                    <strong>Dirección:</strong>
+                    ${pedido.cliente.direccion}
+                </p>
 
-                            <span>
-                                Pack x${producto.pack}
-                            </span>
-
-                            <span>
-                                Cantidad: ${producto.cantidad}
-                            </span>
-
-                        </div>
-
-                    `;
-
-                });
+            </div>
 
 
-                tarjeta.innerHTML = `
-
-                    <div class="cabecera-pedido">
-
-                        <h2>
-                            Pedido #${pedido.id}
-                        </h2>
-
-                        <span class="estado-pedido estado-${(pedido.estado || "Pendiente").toLowerCase().replace(" ", "-")}">
-                            ${pedido.estado || "Pendiente"}
-                        </span>
-
-                    </div>
+            <h3>
+                Producto
+            </h3>
 
 
-                    <div class="datos-admin">
+            <div class="productos-admin">
 
-                        <p>
-                            <strong>Cliente:</strong>
-                            ${pedido.cliente.nombre}
-                        </p>
+                ${productosHTML}
 
-                        <p>
-                            <strong>Teléfono:</strong>
-                            ${pedido.cliente.telefono}
-                        </p>
-
-                        <p>
-                            <strong>Dirección:</strong>
-                            ${pedido.cliente.direccion}
-                        </p>
-
-                        <p>
-                            <strong>Observaciones:</strong>
-                            ${pedido.cliente.observaciones || "Ninguna"}
-                        </p>
-
-                    </div>
+            </div>
 
 
-                    <h3>
-                        Productos
-                    </h3>
+            <div class="total-admin">
+
+                Total:
+                $${pedido.total.toLocaleString("es-CO")}
+
+            </div>
 
 
-                    <div class="productos-admin">
+            <div class="acciones-produccion-mes">
 
-                        ${productosHTML}
+    ${
+        pedido.estado === "Autorizado para MES"
+        ? `
+            <button
+                onclick="cambiarEstado(
+                    ${pedido.id},
+                    'En preparación'
+                )"
+            >
+                Iniciar producción
+            </button>
+        `
+        : ""
+    }
 
-                    </div>
+    ${
+        pedido.estado === "En preparación"
+        ? `
+            <p class="produccion-en-curso">
+                Producción en proceso
+            </p>
+        `
+        : ""
+    }
+
+    ${
+        pedido.estado === "Autorizado para MES" ||
+        pedido.estado === "En preparación"
+        ? `
+            <button
+                onclick="eliminarPedido(${pedido.id})"
+                class="btn-eliminar-pedido"
+            >
+                Eliminar pedido
+            </button>
+        `
+        : ""
+    }
+
+</div>
+        `;
 
 
-                    <div class="total-admin">
-
-                        Total:
-                        $${pedido.total.toLocaleString("es-CO")}
-
-                    </div>
+        contenedor.appendChild(tarjeta);
 
 
-                    <div class="acciones-admin">
+        // Si ya está en preparación,
+        // recuperar su proceso guardado.
 
-                        <button
-                            onclick="cambiarEstado(${pedido.id}, 'En preparación')">
-                            En preparación
-                        </button>
+        if (pedido.estado === "En preparación") {
 
-                        <button
-                            onclick="cambiarEstado(${pedido.id}, 'Listo')">
-                            Listo
-                        </button>
-
-                        <button
-                            onclick="cambiarEstado(${pedido.id}, 'Entregado')">
-                            Entregado
-                        </button>
-
-                        <button
-                            onclick="eliminarPedido(${pedido.id})"
-                            class="boton-eliminar">
-                            Eliminar
-                        </button>
-
-                    </div>
-
-                `;
-
-
-                contenedor.appendChild(tarjeta);
-
-
-                // Recuperar el proceso guardado del pedido
-                if (pedido.estado === "En preparación") {
-
-                    abrirProcesoProduccion(
-                        pedido.id,
-                        pedido.proceso || 0
-                    );
-
-                }
-
-            });
+            abrirProcesoProduccion(
+                pedido.id,
+                pedido.proceso || 0
+            );
 
         }
+
+    });
+
+}
+
+
+// Actualizar otros módulos
+
+cargarPlanificacion();
+cargarClientes();
 
 
         // ==========================================
@@ -2115,5 +2163,1382 @@ async function consultarPedido() {
                 No se pudo consultar el pedido.
             </p>
         `;
+    }
+}
+// ------------------------------------------
+// FORMULACIONES DE PRODUCCIÓN
+// ------------------------------------------
+
+const formulaciones = {
+
+    res: {
+        "Carne de res": 90,
+        "Grasa de res": 7,
+        "Sal": 1.5,
+        "Pimienta negra": 0.3,
+        "Ajo en polvo": 0.3,
+        "Cebolla en polvo": 0.4,
+        "Agua/hielo": 0.5
+    },
+
+    cerdo: {
+        "Carne de cerdo": 91,
+        "Grasa de cerdo": 6,
+        "Sal": 1.5,
+        "Pimienta negra": 0.3,
+        "Ajo en polvo": 0.4,
+        "Cebolla en polvo": 0.3,
+        "Agua/hielo": 0.5
+    },
+
+    mixto: {
+        "Carne de res": 55,
+        "Carne de cerdo": 37,
+        "Grasa para mixto": 6,
+        "Sal": 1.5,
+        "Pimienta negra": 0.2,
+        "Ajo en polvo": 0.2,
+        "Cebolla en polvo": 0.1
+    }
+
+};
+// ------------------------------------------
+// PLANIFICACIÓN DE PRODUCCIÓN
+// ------------------------------------------
+
+async function cargarPlanificacion() {
+
+    try {
+
+        const respuesta = await fetch("/api/pedidos");
+
+        if (!respuesta.ok) {
+            return;
+        }
+
+        const pedidos = await respuesta.json();
+
+        const pedidosPendientes = pedidos.filter(pedido =>
+    pedido.estado === "Pendiente" ||
+pedido.estado === "Autorizado para MES"
+);
+
+        let totalMedallones = 0;
+let totalRes = 0;
+let totalCerdo = 0;
+let totalMixto = 0;
+
+const materiasPrimasPlan = {};
+
+pedidosPendientes.forEach(pedido => {
+
+    pedido.productos.forEach(producto => {
+
+        const medallones =
+            Number(producto.pack) *
+            Number(producto.cantidad);
+
+        totalMedallones =
+            totalMedallones + medallones;
+
+        if (producto.producto === "res") {
+            totalRes =
+                totalRes + medallones;
+        }
+
+        if (producto.producto === "cerdo") {
+            totalCerdo =
+                totalCerdo + medallones;
+        }
+
+        if (producto.producto === "mixto") {
+            totalMixto =
+                totalMixto + medallones;
+        }
+
+        const formulacion =
+            formulaciones[producto.producto];
+
+        if (formulacion) {
+
+            const gramosTotales =
+                medallones * 100;
+
+            Object.entries(formulacion).forEach(
+                ([materia, porcentaje]) => {
+
+                    const gramos =
+                        gramosTotales *
+                        Number(porcentaje) /
+                        100;
+
+                    if (!materiasPrimasPlan[materia]) {
+                        materiasPrimasPlan[materia] = 0;
+                    }
+
+                    materiasPrimasPlan[materia] += gramos;
+                }
+            );
+        }
+
+    });
+
+});
+        const contadorPedidos =
+            document.getElementById("pedidos-pendientes-plan");
+
+        const contadorMedallones =
+            document.getElementById("medallones-plan");
+        const contadorRes =
+    document.getElementById("res-plan");
+
+const contadorCerdo =
+    document.getElementById("cerdo-plan");
+
+const contadorMixto =
+    document.getElementById("mixto-plan");
+
+        const lista =
+            document.getElementById("lista-planificacion");
+
+        if (contadorPedidos) {
+            contadorPedidos.textContent =
+                pedidosPendientes.length;
+        }
+
+        if (contadorMedallones) {
+    contadorMedallones.textContent =
+        totalMedallones;
+}
+
+        if (contadorRes) {
+    contadorRes.textContent = totalRes;
+}
+
+if (contadorCerdo) {
+    contadorCerdo.textContent = totalCerdo;
+}
+
+if (contadorMixto) {
+    contadorMixto.textContent = totalMixto;
+}
+const listaMateriasPrimas =
+    document.getElementById("lista-materias-primas");
+
+if (listaMateriasPrimas) {
+
+    if (Object.keys(materiasPrimasPlan).length === 0) {
+
+        listaMateriasPrimas.innerHTML = `
+            <p>
+                No hay materias primas pendientes de producción.
+            </p>
+        `;
+
+    } else {
+
+        let materiasHTML = "";
+
+        Object.entries(materiasPrimasPlan).forEach(
+            ([materia, cantidad]) => {
+
+                materiasHTML += `
+                    <div class="materia-prima-plan">
+                        <span>${materia}</span>
+                        <strong>
+                            ${cantidad.toFixed(1)} g
+                        </strong>
+                    </div>
+                `;
+
+            }
+        );
+
+        listaMateriasPrimas.innerHTML =
+            materiasHTML;
+    }
+}
+// ------------------------------------------
+// COMPARAR CON INVENTARIO
+// ------------------------------------------
+
+
+        if (!lista) {
+            return;
+        }
+
+        if (pedidosPendientes.length === 0) {
+
+            lista.innerHTML = `
+                <p>
+                    No hay pedidos pendientes de producción.
+                </p>
+            `;
+
+            return;
+        }
+
+        lista.innerHTML = "";
+
+        pedidosPendientes.forEach(pedido => {
+
+            let productosHTML = "";
+
+            pedido.productos.forEach(producto => {
+
+                const medallones =
+                    Number(producto.pack) *
+                    Number(producto.cantidad);
+
+                productosHTML += `
+                    <p>
+                        <strong>${producto.nombre}</strong>
+                        — ${medallones} medallones
+                    </p>
+                `;
+
+            });
+
+            lista.innerHTML += `
+    <div class="pedido-planificacion">
+
+        <h3>Pedido #${pedido.id}</h3>
+
+        <p>
+            <strong>Guía:</strong>
+            ${pedido.guia || "Sin guía"}
+        </p>
+
+        <p>
+            <strong>Estado:</strong>
+            ${pedido.estado}
+        </p>
+
+        <div>
+            ${productosHTML}
+        </div>
+
+        <button
+            class="btn-autorizar-mes"
+            onclick="autorizarPedidoMES(${pedido.id})"
+        >
+            Autorizar para MES
+        </button>
+
+    </div>
+`;
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Error cargando planificación:",
+            error
+        );
+
+    }
+
+}
+// ------------------------------------------
+// DISPONIBILIDAD DE MATERIAS PRIMAS EN MES
+// ------------------------------------------
+
+async function cargarDisponibilidadMES() {
+
+    const lista =
+        document.getElementById(
+            "lista-disponibilidad-materias"
+        );
+
+    if (!lista) {
+        return;
+    }
+
+    try {
+
+        const respuesta =
+            await fetch("/api/pedidos");
+
+        if (!respuesta.ok) {
+            throw new Error(
+                "No se pudieron cargar los pedidos."
+            );
+        }
+
+        const pedidos =
+            await respuesta.json();
+
+        // Solo pedidos que ya fueron autorizados
+        // por ERP para pasar al MES.
+        const pedidosMES =
+            pedidos.filter(pedido =>
+                pedido.estado === "Autorizado para MES" ||
+                pedido.estado === "En preparación"
+            );
+
+        const materiasNecesarias = {};
+
+        pedidosMES.forEach(pedido => {
+
+            pedido.productos.forEach(producto => {
+
+                const medallones =
+                    Number(producto.pack) *
+                    Number(producto.cantidad);
+
+                const gramosTotales =
+                    medallones * 100;
+
+                const formulacion =
+                    formulaciones[producto.producto];
+
+                if (!formulacion) {
+                    return;
+                }
+
+                Object.entries(formulacion).forEach(
+                    ([materia, porcentaje]) => {
+
+                        const gramos =
+                            gramosTotales *
+                            Number(porcentaje) /
+                            100;
+
+                        if (!materiasNecesarias[materia]) {
+                            materiasNecesarias[materia] = 0;
+                        }
+
+                        materiasNecesarias[materia] +=
+                            gramos;
+
+                    }
+                );
+
+            });
+
+        });
+
+        if (
+            Object.keys(materiasNecesarias).length === 0
+        ) {
+
+            lista.innerHTML = `
+                <p>
+                    No hay pedidos autorizados para MES.
+                </p>
+            `;
+
+            return;
+        }
+
+        // Consultar inventario actual
+        const respuestaInventario =
+            await fetch("/api/inventario");
+
+        if (!respuestaInventario.ok) {
+            throw new Error(
+                "No se pudo consultar el inventario."
+            );
+        }
+
+        const inventario =
+            await respuestaInventario.json();
+
+        let disponibilidadHTML = "";
+
+        Object.entries(materiasNecesarias).forEach(
+            ([materia, necesaria]) => {
+
+                const elementoInventario =
+                    inventario.find(
+                        item =>
+                            item.nombre === materia
+                    );
+
+                const disponible =
+                    elementoInventario
+                        ? Number(
+                            elementoInventario.cantidad
+                        )
+                        : 0;
+
+                const suficiente =
+                    disponible >= necesaria;
+
+                const faltante =
+                    necesaria - disponible;
+
+                const estadoTexto =
+                    suficiente
+                        ? "Disponible"
+                        : `Insuficiente — faltan ${faltante.toFixed(1)} g`;
+
+                const estadoClase =
+                    suficiente
+                        ? "materia-disponible"
+                        : "materia-insuficiente";
+
+                disponibilidadHTML += `
+                    <div class="disponibilidad-materia">
+
+                        <strong>
+                            ${materia}
+                        </strong>
+
+                        <span>
+                            Necesaria:
+                            ${necesaria.toFixed(1)} g
+                        </span>
+
+                        <span>
+                            Disponible:
+                            ${disponible.toFixed(1)} g
+                        </span>
+
+                        <strong class="${estadoClase}">
+                            ${estadoTexto}
+                        </strong>
+
+                    </div>
+                `;
+
+            }
+        );
+
+        lista.innerHTML =
+            disponibilidadHTML;
+
+    } catch (error) {
+
+        console.error(
+            "Error cargando disponibilidad MES:",
+            error
+        );
+
+        lista.innerHTML = `
+            <p>
+                No se pudo consultar la disponibilidad
+                de materias primas.
+            </p>
+        `;
+
+    }
+
+}
+// ------------------------------------------
+// TRAZABILIDAD DE PRODUCCIÓN
+// ------------------------------------------
+
+async function cargarTrazabilidad() {
+
+    const lista =
+        document.getElementById(
+            "lista-trazabilidad"
+        );
+
+    if (!lista) {
+        return;
+    }
+
+    try {
+
+        const respuesta =
+            await fetch("/api/pedidos");
+
+        if (!respuesta.ok) {
+            throw new Error(
+                "No se pudieron cargar los pedidos."
+            );
+        }
+
+        const pedidos =
+            await respuesta.json();
+
+        if (pedidosTrazabilidad.length === 0) {
+
+            lista.innerHTML = `
+                <p>
+                    No hay pedidos registrados.
+                </p>
+            `;
+
+            return;
+        }
+
+        let trazabilidadHTML = "";
+
+        pedidosTrazabilidad.forEach(pedido => {
+
+            const etapas = [
+                "Preparación",
+                "Molido",
+                "Mezclado",
+                "Formado",
+                "Enfriamiento",
+                "Empaque",
+                "Etiquetado"
+            ];
+
+            let etapaActual = Number(
+                pedido.proceso || 0
+            );
+
+            let etapasHTML = "";
+
+            etapas.forEach((etapa, indice) => {
+
+                let estadoEtapa = "Pendiente";
+
+                if (
+                    pedido.estado === "Listo" ||
+                    pedido.estado === "Entregado"
+                ) {
+
+                    estadoEtapa = "Completado";
+
+                } else if (
+                    indice < etapaActual
+                ) {
+
+                    estadoEtapa = "Completado";
+
+                } else if (
+                    indice === etapaActual &&
+                    pedido.estado === "En preparación"
+                ) {
+
+                    estadoEtapa = "En proceso";
+
+                }
+
+                etapasHTML += `
+                    <div class="trazabilidad-etapa">
+
+                        <span>
+                            ${indice + 1}.
+                            ${etapa}
+                        </span>
+
+                        <strong>
+                            ${estadoEtapa}
+                        </strong>
+
+                    </div>
+                `;
+
+            });
+
+            trazabilidadHTML += `
+
+                <div class="trazabilidad-pedido">
+
+                    <div class="cabecera-trazabilidad">
+
+                        <h3>
+                            Pedido #${pedido.id}
+                        </h3>
+
+                        <span>
+                            ${pedido.estado}
+                        </span>
+
+                    </div>
+
+                    <p>
+                        <strong>Guía:</strong>
+                        ${pedido.guia || "Sin guía"}
+                    </p>
+
+                    <p>
+                        <strong>Fecha:</strong>
+                        ${pedido.fecha}
+                    </p>
+
+                    <h4>
+                        Recorrido de producción
+                    </h4>
+
+                    <div class="lista-trazabilidad-etapas">
+
+                        ${etapasHTML}
+
+                    </div>
+
+                </div>
+
+            `;
+
+        });
+
+        lista.innerHTML =
+            trazabilidadHTML;
+
+    } catch (error) {
+
+        console.error(
+            "Error cargando trazabilidad:",
+            error
+        );
+
+        lista.innerHTML = `
+            <p>
+                No se pudo cargar la trazabilidad.
+            </p>
+        `;
+
+    }
+
+}
+
+// ------------------------------------------
+// GESTIÓN DE CLIENTES
+// ------------------------------------------
+
+async function cargarClientes() {
+
+    const lista =
+        document.getElementById("lista-clientes");
+
+    if (!lista) {
+        return;
+    }
+
+    try {
+
+        const respuesta =
+            await fetch("/api/clientes");
+
+        if (!respuesta.ok) {
+            throw new Error(
+                "No se pudieron cargar los clientes."
+            );
+        }
+
+        const clientes =
+            await respuesta.json();
+
+        if (clientes.length === 0) {
+
+            lista.innerHTML = `
+                <p>
+                    No hay clientes registrados.
+                </p>
+            `;
+
+            return;
+        }
+
+        let clientesHTML = "";
+
+        clientes.forEach(cliente => {
+
+            clientesHTML += `
+                <div class="cliente-admin">
+
+                    <h3>
+                        ${cliente.nombre}
+                    </h3>
+
+                    <p>
+                        <strong>Teléfono:</strong>
+                        ${cliente.telefono}
+                    </p>
+
+                    <p>
+                        <strong>Dirección:</strong>
+                        ${cliente.direccion}
+                    </p>
+
+                    <p>
+                        <strong>Pedidos realizados:</strong>
+                        ${cliente.pedidos}
+                    </p>
+
+                    <p>
+                        <strong>Último pedido:</strong>
+                        ${cliente.ultimoPedido}
+                    </p>
+                    <button
+    class="btn-historial-cliente"
+    onclick="verHistorialCliente('${cliente.telefono}')"
+>
+    Ver pedidos
+</button>
+
+                </div>
+            `;
+
+        });
+
+        lista.innerHTML = clientesHTML;
+
+    } catch (error) {
+
+        console.error(
+            "Error cargando clientes:",
+            error
+        );
+
+        lista.innerHTML = `
+            <p>
+                No se pudieron cargar los clientes.
+            </p>
+        `;
+
+    }
+
+}
+// ------------------------------------------
+// HISTORIAL DE PEDIDOS DEL CLIENTE
+// ------------------------------------------
+
+async function verHistorialCliente(telefono) {
+
+    const modal =
+        document.getElementById(
+            "modal-historial-cliente"
+        );
+
+    const contenido =
+        document.getElementById(
+            "contenido-historial-cliente"
+        );
+
+    modal.style.display = "flex";
+
+    contenido.innerHTML = `
+        <p>Cargando pedidos...</p>
+    `;
+
+    try {
+
+        const respuesta =
+            await fetch(
+                `/api/clientes/${encodeURIComponent(telefono)}/pedidos`
+            );
+
+        if (!respuesta.ok) {
+
+            throw new Error(
+                "No se pudieron cargar los pedidos."
+            );
+
+        }
+
+        const pedidos =
+            await respuesta.json();
+
+        if (pedidos.length === 0) {
+
+            contenido.innerHTML = `
+                <p>
+                    Este cliente no tiene pedidos registrados.
+                </p>
+            `;
+
+            return;
+        }
+
+        let historialHTML = "";
+
+        pedidos.forEach(pedido => {
+
+            let productosHTML = "";
+
+            pedido.productos.forEach(producto => {
+
+                productosHTML += `
+                    <div class="producto-historial">
+
+                        <strong>
+                            ${producto.nombre}
+                        </strong>
+
+                        <span>
+                            Pack x${producto.pack}
+                        </span>
+
+                        <span>
+                            Cantidad:
+                            ${producto.cantidad}
+                        </span>
+
+                    </div>
+                `;
+
+            });
+
+            historialHTML += `
+                <div class="pedido-historial">
+
+                    <div class="encabezado-pedido-historial">
+
+                        <h3>
+                            Pedido #${pedido.id}
+                        </h3>
+
+                        <span class="estado-historial estado-${pedido.estado
+    .toLowerCase()
+    .replace(/\s+/g, "-")}">
+    ${pedido.estado}
+</span>
+
+                    </div>
+
+                    <p>
+                        <strong>Guía:</strong>
+                        ${pedido.guia || "Sin guía"}
+                    </p>
+
+                    <p>
+                        <strong>Fecha:</strong>
+                        ${pedido.fecha}
+                    </p>
+
+                    <div class="productos-historial">
+
+                        <strong>Productos</strong>
+
+                        ${productosHTML}
+
+                    </div>
+
+                    <div class="total-historial">
+
+                        Total:
+                        $${Number(pedido.total)
+                            .toLocaleString("es-CO")}
+
+                    </div>
+
+                </div>
+            `;
+
+        });
+
+        contenido.innerHTML =
+            historialHTML;
+
+    } catch (error) {
+
+        console.error(
+            "Error cargando historial:",
+            error
+        );
+
+        contenido.innerHTML = `
+            <p>
+                No se pudo cargar el historial
+                del cliente.
+            </p>
+        `;
+
+    }
+
+}
+function cerrarHistorialCliente() {
+
+    const modal =
+        document.getElementById(
+            "modal-historial-cliente"
+        );
+
+    modal.style.display = "none";
+
+}
+// ==========================================
+// TRAZABILIDAD DE PRODUCCIÓN
+// ==========================================
+
+async function cargarTrazabilidad() {
+
+    const lista =
+        document.getElementById("lista-trazabilidad");
+
+    if (!lista) {
+        return;
+    }
+
+    try {
+
+        const respuesta =
+            await fetch("/api/pedidos");
+
+        if (!respuesta.ok) {
+            throw new Error(
+                "No se pudieron cargar los pedidos."
+            );
+        }
+
+        const pedidos =
+            await respuesta.json();
+
+        // Mostrar solamente pedidos que están
+        // actualmente en el flujo MES → PROCESO
+        const pedidosTrazabilidad =
+            pedidos.filter(pedido =>
+                pedido.estado === "Autorizado para MES" ||
+                pedido.estado === "En preparación"
+            );
+
+        if (pedidosTrazabilidad.length === 0) {
+
+            lista.innerHTML = `
+                <p>
+                    No hay pedidos activos en producción.
+                </p>
+            `;
+
+            return;
+        }
+
+        let trazabilidadHTML = "";
+
+        pedidosTrazabilidad.forEach(pedido => {
+
+            const etapas = [
+                "Preparación",
+                "Molido",
+                "Mezclado",
+                "Formado",
+                "Enfriamiento",
+                "Empaque",
+                "Etiquetado"
+            ];
+
+            const procesoActual =
+                Number(pedido.proceso || 0);
+
+            let etapasHTML = "";
+
+            etapas.forEach((etapa, indice) => {
+
+                let texto = "Pendiente";
+                let clase = "trazabilidad-pendiente";
+
+                if (pedido.estado === "En preparación") {
+
+                    if (indice < procesoActual) {
+
+                        texto = "Completado";
+                        clase = "trazabilidad-completado";
+
+                    } else if (indice === procesoActual) {
+
+                        texto = "En proceso";
+                        clase = "trazabilidad-actual";
+
+                    }
+
+                }
+
+                if (pedido.estado === "Autorizado para MES") {
+
+                    if (indice === 0) {
+
+                        texto = "Pendiente de iniciar";
+                        clase = "trazabilidad-actual";
+
+                    }
+
+                }
+
+                etapasHTML += `
+                    <div class="trazabilidad-etapa">
+
+                        <span>
+                            ${indice + 1}. ${etapa}
+                        </span>
+
+                        <strong class="${clase}">
+                            ${texto}
+                        </strong>
+
+                    </div>
+                `;
+
+            });
+
+            trazabilidadHTML += `
+
+                <div class="trazabilidad-pedido">
+
+                    <div class="cabecera-trazabilidad">
+
+                        <h3>
+                            Pedido #${pedido.id}
+                        </h3>
+
+                        <span>
+                            ${pedido.estado}
+                        </span>
+
+                    </div>
+
+                    <p>
+                        <strong>Guía:</strong>
+                        ${pedido.guia || "Sin guía"}
+                    </p>
+
+                    <p>
+                        <strong>Fecha:</strong>
+                        ${pedido.fecha}
+                    </p>
+
+                    <h4>
+                        Recorrido de producción
+                    </h4>
+
+                    <div class="lista-trazabilidad-etapas">
+
+                        ${etapasHTML}
+
+                    </div>
+
+                </div>
+
+            `;
+
+        });
+
+        lista.innerHTML =
+            trazabilidadHTML;
+
+    } catch (error) {
+
+        console.error(
+            "Error cargando trazabilidad:",
+            error
+        );
+
+        lista.innerHTML = `
+            <p>
+                No se pudo cargar la trazabilidad.
+            </p>
+        `;
+
+    }
+
+}
+// ==========================================
+// CONTROL DE INVENTARIO EN MES
+// ==========================================
+
+async function cargarControlInventarioMES() {
+
+    const lista =
+        document.getElementById(
+            "lista-control-inventario"
+        );
+
+    if (!lista) {
+        return;
+    }
+
+    try {
+
+        const respuestaPedidos =
+            await fetch("/api/pedidos");
+
+        if (!respuestaPedidos.ok) {
+            throw new Error(
+                "No se pudieron cargar los pedidos."
+            );
+        }
+
+        const pedidos =
+            await respuestaPedidos.json();
+
+        // Pedidos que MES está gestionando
+        const pedidosMES =
+            pedidos.filter(pedido =>
+                pedido.estado === "Autorizado para MES" ||
+                pedido.estado === "En preparación"
+            );
+
+        if (pedidosMES.length === 0) {
+
+            lista.innerHTML = `
+                <p>
+                    No hay pedidos activos para controlar inventario.
+                </p>
+            `;
+
+            return;
+        }
+
+        // Calcular materias primas necesarias
+        const materiasNecesarias = {};
+
+        pedidosMES.forEach(pedido => {
+
+            pedido.productos.forEach(producto => {
+
+                const medallones =
+                    Number(producto.pack) *
+                    Number(producto.cantidad);
+
+                const gramosTotales =
+                    medallones * 100;
+
+                const formulacion =
+                    formulaciones[producto.producto];
+
+                if (!formulacion) {
+                    return;
+                }
+
+                Object.entries(formulacion).forEach(
+                    ([materia, porcentaje]) => {
+
+                        const gramos =
+                            gramosTotales *
+                            Number(porcentaje) /
+                            100;
+
+                        if (!materiasNecesarias[materia]) {
+                            materiasNecesarias[materia] = 0;
+                        }
+
+                        materiasNecesarias[materia] +=
+                            gramos;
+
+                    }
+                );
+
+            });
+
+        });
+
+        // Consultar inventario actual
+        const respuestaInventario =
+            await fetch("/api/inventario");
+
+        if (!respuestaInventario.ok) {
+            throw new Error(
+                "No se pudo consultar el inventario."
+            );
+        }
+
+        const inventario =
+            await respuestaInventario.json();
+
+        let html = "";
+
+        Object.entries(materiasNecesarias).forEach(
+            ([materia, necesaria]) => {
+
+                const elemento =
+                    inventario.find(
+                        item =>
+                            item.nombre === materia
+                    );
+
+                const disponible =
+                    elemento
+                        ? Number(elemento.cantidad)
+                        : 0;
+
+                const despues =
+                    disponible - necesaria;
+
+                const suficiente =
+                    disponible >= necesaria;
+
+                const estado =
+                    suficiente
+                        ? "Disponible"
+                        : "Insuficiente";
+
+                const clase =
+                    suficiente
+                        ? "inventario-disponible"
+                        : "inventario-insuficiente";
+
+                html += `
+
+                    <div class="control-inventario-item">
+
+                        <div>
+                            <strong>
+                                ${materia}
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>
+                                Disponible:
+                            </span>
+
+                            <strong>
+                                 ${(disponible / 1000).toFixed(3)} kg
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>
+                                Necesaria:
+                            </span>
+
+                            <strong>
+                                ${(necesaria / 1000).toFixed(3)} kg
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>
+                                Después de producir:
+                            </span>
+
+                            <strong>
+                                ${(
+    Math.max(despues, 0) / 1000
+).toFixed(3)} kg
+                            </strong>
+                        </div>
+
+                        <span class="${clase}">
+                            ${estado}
+                        </span>
+
+                    </div>
+
+                `;
+
+            }
+        );
+
+        lista.innerHTML = html;
+
+    } catch (error) {
+
+        console.error(
+            "Error cargando control de inventario MES:",
+            error
+        );
+
+        lista.innerHTML = `
+            <p>
+                No se pudo cargar el control de inventario.
+            </p>
+        `;
+
+    }
+
+}
+// ==========================================
+// CAMBIO ENTRE MÓDULOS ERP, MES Y PROCESO
+// ==========================================
+
+function mostrarModulo(modulo) {
+
+    const secciones =
+        document.querySelectorAll("[data-modulo]");
+
+    secciones.forEach(seccion => {
+
+        if (seccion.dataset.modulo === modulo) {
+            seccion.style.display = "";
+        } else {
+            seccion.style.display = "none";
+        }
+
+    });
+
+    const botones =
+        document.querySelectorAll(".boton-modulo");
+
+    botones.forEach(boton => {
+
+        boton.classList.remove("activo");
+
+    });
+
+    const botonActivo =
+        document.querySelector(
+            `.boton-modulo[onclick="mostrarModulo('${modulo}')"]`
+        );
+
+    if (botonActivo) {
+        botonActivo.classList.add("activo");
+    }
+    if (modulo === "mes") {
+
+    cargarDisponibilidadMES();
+
+    cargarControlInventarioMES();
+
+    cargarTrazabilidad();
+
+}
+
+}
+// Mostrar ERP al abrir el panel
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    mostrarModulo("erp");
+
+});
+// ==========================================
+// AUTORIZAR PEDIDO PARA MES
+// ==========================================
+
+async function autorizarPedidoMES(id) {
+
+    const confirmar = confirm(
+        `¿Autorizar el pedido #${id} para pasar al MES?`
+    );
+
+    if (!confirmar) {
+        return;
+    }
+
+    try {
+
+        const respuesta = await fetch(
+            `/api/pedidos/${id}/estado`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    estado: "Autorizado para MES"
+                })
+            }
+        );
+
+        const resultado = await respuesta.json();
+
+if (!respuesta.ok) {
+
+            alert(
+                resultado.mensaje ||
+                "No se pudo autorizar el pedido."
+            );
+
+            return;
+        }
+
+        alert(
+            `Pedido #${id} autorizado para pasar al MES.`
+        );
+
+        cargarPlanificacion();
+
+        cargarPedidosAdmin();
+
+    } catch (error) {
+
+        console.error(
+            "Error autorizando pedido para MES:",
+            error
+        );
+
+        alert(
+            "No se pudo autorizar el pedido para MES."
+        );
     }
 }

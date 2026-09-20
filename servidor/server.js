@@ -294,6 +294,7 @@ app.get("/api/pedidos", async (req, res) => {
                 total,
                 estado,
                 proceso,
+                guia,
                 fecha
             FROM pedidos
             ORDER BY id ASC
@@ -312,6 +313,8 @@ app.get("/api/pedidos", async (req, res) => {
             estado: pedido.estado,
 
             proceso: pedido.proceso,
+
+            guia: pedido.guia,
 
             fecha: new Date(pedido.fecha)
                 .toLocaleString("es-CO")
@@ -527,28 +530,6 @@ app.post("/api/pedidos", async (req, res) => {
             }
 
         }
-
-
-        // ------------------------------------------
-        // DESCONTAR INVENTARIO
-        // ------------------------------------------
-
-        for (
-            const materia in consumo
-        ) {
-
-            await client.query(`
-                UPDATE inventario
-                SET cantidad_gramos =
-                    cantidad_gramos - $1
-                WHERE nombre = $2
-            `, [
-                consumo[materia],
-                materia
-            ]);
-
-        }
-
 
         // ------------------------------------------
 // GUARDAR PEDIDO
@@ -843,18 +824,15 @@ await client.query("COMMIT");
 
 app.put("/api/pedidos/:id/estado", async (req, res) => {
 
-    // Solo administradores
-
     if (!req.session.usuario) {
 
         return res.status(401).json({
-
-            mensaje:
-                "Debes iniciar sesión."
-
+            mensaje: "Debes iniciar sesión."
         });
 
     }
+
+    const client = await pool.connect();
 
     try {
 
@@ -868,11 +846,9 @@ app.put("/api/pedidos/:id/estado", async (req, res) => {
         const estadosPermitidos = [
 
             "Pendiente",
-
+            "Autorizado para MES",
             "En preparación",
-
             "Listo",
-
             "Entregado"
 
         ];
@@ -885,54 +861,255 @@ app.put("/api/pedidos/:id/estado", async (req, res) => {
         ) {
 
             return res.status(400).json({
-
-                mensaje:
-                    "Estado no válido."
-
+                mensaje: "Estado no válido."
             });
 
         }
 
 
-        const resultado = await pool.query(`
-            UPDATE pedidos
-            SET estado = $1
-            WHERE id = $2
-            RETURNING id, cliente, productos, total, estado, fecha
-        `, [
-            nuevoEstado,
-            id
-        ]);
+        await client.query("BEGIN");
 
 
-        if (resultado.rows.length === 0) {
+        // ==========================================
+        // OBTENER PEDIDO
+        // ==========================================
+
+        const resultadoPedido =
+            await client.query(`
+                SELECT
+                    id,
+                    cliente,
+                    productos,
+                    total,
+                    estado,
+                    proceso,
+                    guia,
+                    fecha,
+                    inventario_descontado
+                FROM pedidos
+                WHERE id = $1
+                FOR UPDATE
+            `, [id]);
+
+
+        if (resultadoPedido.rows.length === 0) {
+
+            await client.query("ROLLBACK");
 
             return res.status(404).json({
-
-                mensaje:
-                    "Pedido no encontrado."
-
+                mensaje: "Pedido no encontrado."
             });
 
         }
 
 
-        const pedido = resultado.rows[0];
+        const pedido =
+            resultadoPedido.rows[0];
+
+
+        // ==========================================
+        // DESCONTAR INVENTARIO AL INICIAR PRODUCCIÓN
+        // ==========================================
+
+        if (
+            nuevoEstado === "En preparación" &&
+            !pedido.inventario_descontado
+        ) {
+
+            const consumo = {};
+
+
+            pedido.productos.forEach(producto => {
+
+                const medallones =
+                    Number(producto.pack) *
+                    Number(producto.cantidad);
+
+                const gramosTotales =
+                    medallones * 100;
+
+                const formulacion =
+                    formulaciones[producto.producto];
+
+
+                if (!formulacion) {
+                    throw new Error(
+                        `No existe formulación para ${producto.producto}.`
+                    );
+                }
+
+
+                Object.entries(formulacion).forEach(
+                    ([materia, porcentaje]) => {
+
+                        const gramos =
+                            gramosTotales *
+                            Number(porcentaje) /
+                            100;
+
+
+                        if (!consumo[materia]) {
+                            consumo[materia] = 0;
+                        }
+
+
+                        consumo[materia] +=
+                            gramos;
+
+                    }
+                );
+
+            });
+
+
+            // ==========================================
+            // COMPROBAR INVENTARIO
+            // ==========================================
+
+            for (
+                const materia in consumo
+            ) {
+
+                const resultadoInventario =
+                    await client.query(`
+                        SELECT
+                            cantidad_gramos
+                        FROM inventario
+                        WHERE nombre = $1
+                        FOR UPDATE
+                    `, [materia]);
+
+
+                if (
+                    resultadoInventario.rows.length === 0
+                ) {
+
+                    throw new Error(
+                        `No existe la materia prima ${materia}.`
+                    );
+
+                }
+
+
+                const disponible =
+                    Number(
+                        resultadoInventario
+                            .rows[0]
+                            .cantidad_gramos
+                    );
+
+
+                if (
+                    disponible <
+                    consumo[materia]
+                ) {
+
+                    throw new Error(
+                        `Inventario insuficiente de ${materia}.`
+                    );
+
+                }
+
+            }
+
+
+            // ==========================================
+            // DESCONTAR INVENTARIO
+            // ==========================================
+
+            for (
+                const materia in consumo
+            ) {
+
+                await client.query(`
+                    UPDATE inventario
+                    SET cantidad_gramos =
+                        cantidad_gramos - $1
+                    WHERE nombre = $2
+                `, [
+                    consumo[materia],
+                    materia
+                ]);
+
+            }
+
+
+            // Marcar inventario como descontado
+
+            await client.query(`
+                UPDATE pedidos
+                SET
+                    inventario_descontado = TRUE
+                WHERE id = $1
+            `, [id]);
+
+        }
+
+
+        // ==========================================
+        // ACTUALIZAR ESTADO
+        // ==========================================
+
+        const resultado =
+            await client.query(`
+                UPDATE pedidos
+                SET estado = $1
+                WHERE id = $2
+                RETURNING
+                    id,
+                    cliente,
+                    productos,
+                    total,
+                    estado,
+                    proceso,
+                    guia,
+                    fecha,
+                    inventario_descontado
+            `, [
+                nuevoEstado,
+                id
+            ]);
+
+
+        await client.query("COMMIT");
+
+
+        const pedidoActualizado =
+            resultado.rows[0];
+
 
         const pedidoRespuesta = {
 
-            id: pedido.id,
+            id: pedidoActualizado.id,
 
-            cliente: pedido.cliente,
+            cliente:
+                pedidoActualizado.cliente,
 
-            productos: pedido.productos,
+            productos:
+                pedidoActualizado.productos,
 
-            total: Number(pedido.total),
+            total:
+                Number(
+                    pedidoActualizado.total
+                ),
 
-            estado: pedido.estado,
+            estado:
+                pedidoActualizado.estado,
 
-            fecha: new Date(pedido.fecha)
-                .toLocaleString("es-CO")
+            proceso:
+                pedidoActualizado.proceso,
+
+            guia:
+                pedidoActualizado.guia,
+
+            inventario_descontado:
+                pedidoActualizado
+                    .inventario_descontado,
+
+            fecha:
+                new Date(
+                    pedidoActualizado.fecha
+                ).toLocaleString("es-CO")
 
         };
 
@@ -950,14 +1127,26 @@ app.put("/api/pedidos/:id/estado", async (req, res) => {
 
     } catch (error) {
 
-        console.error(error);
+        await client.query("ROLLBACK");
+
+        console.error(
+            "Error cambiando estado del pedido:",
+            error
+        );
+
 
         res.status(500).json({
 
             mensaje:
+                error.message ||
                 "No se pudo actualizar el estado."
 
         });
+
+
+    } finally {
+
+        client.release();
 
     }
 
@@ -967,48 +1156,90 @@ app.put("/api/pedidos/:id/estado", async (req, res) => {
 // ==========================================
 
 app.put("/api/pedidos/:id/proceso", async (req, res) => {
+
     if (!req.session.usuario) {
+
         return res.status(401).json({
             mensaje: "Debes iniciar sesión."
         });
+
     }
 
     try {
+
         const id = Number(req.params.id);
         const proceso = Number(req.body.proceso);
 
-        if (!Number.isInteger(proceso) || proceso < 0 || proceso > 6) {
+        if (!Number.isInteger(id)) {
+
             return res.status(400).json({
-                mensaje: "Etapa de proceso no válida."
+                mensaje: "ID de pedido no válido."
             });
+
+        }
+
+        if (
+            !Number.isInteger(proceso) ||
+            proceso < 0 ||
+            proceso > 6
+        ) {
+
+            return res.status(400).json({
+                mensaje: "Proceso no válido."
+            });
+
         }
 
         const resultado = await pool.query(`
             UPDATE pedidos
             SET proceso = $1
             WHERE id = $2
-            RETURNING id, proceso
-        `, [proceso, id]);
+            RETURNING
+                id,
+                proceso,
+                estado
+        `, [
+            proceso,
+            id
+        ]);
 
         if (resultado.rows.length === 0) {
+
             return res.status(404).json({
                 mensaje: "Pedido no encontrado."
             });
+
         }
 
         res.json({
-            mensaje: "Proceso actualizado correctamente.",
-            id: resultado.rows[0].id,
-            proceso: resultado.rows[0].proceso
+
+            mensaje:
+                "Proceso actualizado correctamente.",
+
+            pedido: {
+                id: resultado.rows[0].id,
+                proceso: resultado.rows[0].proceso,
+                estado: resultado.rows[0].estado
+            }
+
         });
 
     } catch (error) {
-        console.error(error);
+
+        console.error(
+            "Error actualizando proceso:",
+            error
+        );
 
         res.status(500).json({
-            mensaje: "No se pudo actualizar el proceso."
+
+            mensaje:
+                "No se pudo actualizar el proceso."
+
         });
+
     }
+
 });
 // ==========================================
 // ELIMINAR PEDIDO Y DEVOLVER INVENTARIO
@@ -1056,13 +1287,14 @@ app.delete("/api/pedidos/:id", async (req, res) => {
         // ------------------------------------------
 
         const resultado = await client.query(`
-            SELECT
-                id,
-                productos
-            FROM pedidos
-            WHERE id = $1
-            FOR UPDATE
-        `, [id]);
+    SELECT
+        id,
+        productos,
+        inventario_descontado
+    FROM pedidos
+    WHERE id = $1
+    FOR UPDATE
+`, [id]);
 
 
         if (resultado.rows.length === 0) {
@@ -1077,6 +1309,10 @@ app.delete("/api/pedidos/:id", async (req, res) => {
 
 
         const pedido = resultado.rows[0];
+        if (!pedido.inventario_descontado) {
+    // El pedido nunca descontó inventario,
+    // por lo tanto no se debe devolver materia prima.
+}
 
         // ------------------------------------------
         // CALCULAR LAS MATERIAS PRIMAS A DEVOLVER
@@ -1132,39 +1368,44 @@ app.delete("/api/pedidos/:id", async (req, res) => {
 
         }
 
+// ------------------------------------------
+// DEVOLVER LAS MATERIAS PRIMAS
+// SOLO SI EL INVENTARIO FUE DESCONTADO
+// ------------------------------------------
 
-        // ------------------------------------------
-        // DEVOLVER LAS MATERIAS PRIMAS
-        // ------------------------------------------
-        console.log("DEVOLUCIÓN DEL PEDIDO:", devolucion);
+if (pedido.inventario_descontado) {
 
-        for (const materia in devolucion) {
+    console.log("DEVOLUCIÓN DEL PEDIDO:", devolucion);
 
-            const resultadoInventario =
-                await client.query(`
-                    UPDATE inventario
-                    SET cantidad_gramos =
-                        cantidad_gramos + $1
-                    WHERE nombre = $2
-                    RETURNING nombre
-                `, [
-                    devolucion[materia],
-                    materia
-                ]);
-                console.log(
-    `Devuelto ${devolucion[materia]} g de ${materia}`
-);
+    for (const materia in devolucion) {
 
+        const resultadoInventario =
+            await client.query(`
+                UPDATE inventario
+                SET cantidad_gramos =
+                    cantidad_gramos + $1
+                WHERE nombre = $2
+                RETURNING nombre
+            `, [
+                devolucion[materia],
+                materia
+            ]);
 
-            if (resultadoInventario.rows.length === 0) {
+        console.log(
+            `Devuelto ${devolucion[materia]} g de ${materia}`
+        );
 
-                throw new Error(
-                    `Materia prima no encontrada: ${materia}`
-                );
+        if (resultadoInventario.rows.length === 0) {
 
-            }
+            throw new Error(
+                `Materia prima no encontrada: ${materia}`
+            );
 
         }
+
+    }
+
+}
 
 
         // ------------------------------------------
@@ -1260,6 +1501,180 @@ app.get("/api/inventario", async (req, res) => {
 
         res.status(500).json({
             mensaje: "No se pudo cargar el inventario."
+        });
+
+    }
+
+});
+// ==========================================
+// OBTENER CLIENTES
+// ==========================================
+
+app.get("/api/clientes", async (req, res) => {
+
+    // Solo administradores
+
+    if (!req.session.usuario) {
+
+        return res.status(401).json({
+            mensaje: "Debes iniciar sesión."
+        });
+
+    }
+
+    try {
+
+        const resultado = await pool.query(`
+            SELECT
+                cliente,
+                fecha
+            FROM pedidos
+            ORDER BY fecha DESC
+        `);
+
+        const clientesMap = new Map();
+
+        resultado.rows.forEach(pedido => {
+
+            const cliente = pedido.cliente;
+
+            const telefono =
+                String(cliente.telefono || "").trim();
+
+            if (!telefono) {
+                return;
+            }
+
+            if (!clientesMap.has(telefono)) {
+
+                clientesMap.set(telefono, {
+                    nombre: cliente.nombre,
+                    telefono: telefono,
+                    direccion: cliente.direccion,
+                    observaciones:
+                        cliente.observaciones || "",
+                    pedidos: 0,
+                    ultimoPedido: pedido.fecha
+                });
+
+            }
+
+            const clienteActual =
+                clientesMap.get(telefono);
+
+            clienteActual.pedidos++;
+
+        });
+
+        const clientes =
+            Array.from(clientesMap.values()).map(cliente => ({
+
+                nombre: cliente.nombre,
+
+                telefono: cliente.telefono,
+
+                direccion: cliente.direccion,
+
+                observaciones:
+                    cliente.observaciones,
+
+                pedidos:
+                    cliente.pedidos,
+
+                ultimoPedido:
+                    new Date(cliente.ultimoPedido)
+                        .toLocaleString("es-CO")
+
+            }));
+
+        res.json(clientes);
+
+    } catch (error) {
+
+        console.error(
+            "Error obteniendo clientes:",
+            error
+        );
+
+        res.status(500).json({
+            mensaje:
+                "No se pudieron cargar los clientes."
+        });
+
+    }
+
+});
+// ==========================================
+// OBTENER PEDIDOS DE UN CLIENTE
+// ==========================================
+
+app.get("/api/clientes/:telefono/pedidos", async (req, res) => {
+
+    // Solo administradores
+
+    if (!req.session.usuario) {
+
+        return res.status(401).json({
+            mensaje: "Debes iniciar sesión."
+        });
+
+    }
+
+    try {
+
+        const { telefono } = req.params;
+
+        const resultado = await pool.query(`
+            SELECT
+                id,
+                cliente,
+                productos,
+                total,
+                estado,
+                proceso,
+                guia,
+                fecha
+            FROM pedidos
+            WHERE cliente->>'telefono' = $1
+            ORDER BY fecha DESC
+        `, [
+            telefono
+        ]);
+
+        const pedidos = resultado.rows.map(pedido => ({
+
+            id: pedido.id,
+
+            cliente: pedido.cliente,
+
+            productos: pedido.productos,
+
+            total: Number(pedido.total),
+
+            estado: pedido.estado,
+
+            proceso: pedido.proceso,
+
+            guia: pedido.guia,
+
+            fecha:
+                new Date(pedido.fecha)
+                    .toLocaleString("es-CO")
+
+        }));
+
+        res.json(pedidos);
+
+    } catch (error) {
+
+        console.error(
+            "Error obteniendo pedidos del cliente:",
+            error
+        );
+
+        res.status(500).json({
+            mensaje:
+                "No se pudieron cargar los pedidos del cliente."
         });
 
     }
@@ -1590,15 +2005,16 @@ async function crearTablaPedidos() {
 
     await pool.query(`
         CREATE TABLE IF NOT EXISTS pedidos (
-            id SERIAL PRIMARY KEY,
-            cliente JSONB NOT NULL,
-            productos JSONB NOT NULL,
-            total NUMERIC NOT NULL,
-            estado VARCHAR(50) NOT NULL,
-            proceso INTEGER NOT NULL DEFAULT 0,
-            guia VARCHAR(30) UNIQUE,
-            fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-        )
+    id SERIAL PRIMARY KEY,
+    cliente JSONB NOT NULL,
+    productos JSONB NOT NULL,
+    total NUMERIC NOT NULL,
+    estado VARCHAR(50) NOT NULL,
+    proceso INTEGER NOT NULL DEFAULT 0,
+    guia VARCHAR(30) UNIQUE,
+    fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    inventario_descontado BOOLEAN NOT NULL DEFAULT false
+)
     `);
 
     await pool.query(`
@@ -1611,6 +2027,26 @@ async function crearTablaPedidos() {
         ADD COLUMN IF NOT EXISTS guia VARCHAR(30) UNIQUE
     `);
 
+    await pool.query(`
+    ALTER TABLE pedidos
+    ADD COLUMN IF NOT EXISTS inventario_descontado BOOLEAN
+`);
+
+await pool.query(`
+    UPDATE pedidos
+    SET inventario_descontado = TRUE
+    WHERE inventario_descontado IS NULL
+`);
+
+await pool.query(`
+    ALTER TABLE pedidos
+    ALTER COLUMN inventario_descontado SET DEFAULT FALSE
+`);
+
+await pool.query(`
+    ALTER TABLE pedidos
+    ALTER COLUMN inventario_descontado SET NOT NULL
+`);
     console.log("Tabla de pedidos lista.");
 }
 // ------------------------------------------

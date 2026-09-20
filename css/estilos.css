@@ -2406,3 +2406,633 @@ footer p {
     }
 
 }
+/* ==========================================
+   PLANIFICACIÓN DE PRODUCCIÓN
+========================================== */
+
+.seccion-planificacion {
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 30px;
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.10);
+}
+
+.seccion-planificacion h2 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    font-size: 28px;
+}
+
+.seccion-planificacion > p {
+    color: #555;
+    margin-bottom: 25px;
+}
+
+/* RESUMEN */
+
+.resumen-planificacion {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.dato-planificacion {
+    padding: 18px 10px;
+    background: #f5f5f5;
+    border-radius: 10px;
+    text-align: center;
+    border: 1px solid #e5e5e5;
+}
+
+.dato-planificacion strong {
+    display: block;
+    font-size: 26px;
+    margin-bottom: 6px;
+}
+
+.dato-planificacion span {
+    font-size: 14px;
+    color: #555;
+}
+
+/* PEDIDOS */
+
+.pedido-planificacion {
+    padding: 20px;
+    margin-bottom: 15px;
+    background: #fafafa;
+    border: 1px solid #e2e2e2;
+    border-left: 5px solid #e00000;
+    border-radius: 10px;
+}
+
+.pedido-planificacion h3 {
+    margin-top: 0;
+    margin-bottom: 12px;
+}
+
+.pedido-planificacion p {
+    margin: 6px 0;
+}
+
+/* MATERIAS PRIMAS */
+
+.materias-primas-plan,
+.disponibilidad-materias-plan {
+    margin-top: 30px;
+    padding: 20px;
+    background: #f8f8f8;
+    border-radius: 10px;
+    border: 1px solid #e2e2e2;
+}
+
+.materias-primas-plan h3,
+.disponibilidad-materias-plan h3 {
+    margin-top: 0;
+    margin-bottom: 18px;
+}
+
+/* CADA MATERIA PRIMA */
+
+.materia-prima-plan {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    margin-bottom: 8px;
+    background: white;
+    border-radius: 7px;
+    border: 1px solid #e5e5e5;
+}
+
+.materia-prima-plan strong {
+    font-size: 15px;
+}
+
+/* DISPONIBILIDAD */
+
+.disponibilidad-materia {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 120px;
+    gap: 15px;
+    align-items: center;
+    padding: 12px 15px;
+    margin-bottom: 8px;
+    background: white;
+    border-radius: 7px;
+    border: 1px solid #e5e5e5;
+}
+
+.disponibilidad-materia strong:last-child {
+    text-align: center;
+    padding: 6px 10px;
+    border-radius: 6px;
+    background: #dff5df;
+    color: #218838;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 800px) {
+
+    .resumen-planificacion {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .disponibilidad-materia {
+        grid-template-columns: 1fr;
+        gap: 5px;
+    }
+
+    .disponibilidad-materia strong:last-child {
+        text-align: left;
+        width: fit-content;
+    }
+}
+
+@media (max-width: 500px) {
+
+    .seccion-planificacion {
+        margin: 20px 10px;
+        padding: 20px;
+    }
+
+    .resumen-planificacion {
+        grid-template-columns: 1fr;
+    }
+}
+.materia-disponible {
+    background: #dff5df;
+    color: #218838;
+    padding: 6px 10px;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.materia-insuficiente {
+    background: #f8d7da;
+    color: #b02a37;
+    padding: 6px 10px;
+    border-radius: 6px;
+    text-align: center;
+}
+/* ==========================================
+   GESTIÓN DE CLIENTES
+========================================== */
+
+.seccion-clientes {
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 30px;
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.10);
+}
+
+.seccion-clientes h2 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    font-size: 28px;
+}
+
+.seccion-clientes > p {
+    color: #555;
+    margin-bottom: 25px;
+}
+
+.cliente-admin {
+    padding: 20px;
+    margin-bottom: 15px;
+    background: #fafafa;
+    border: 1px solid #e2e2e2;
+    border-left: 5px solid #e00000;
+    border-radius: 10px;
+}
+
+.cliente-admin h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 20px;
+}
+
+.cliente-admin p {
+    margin: 7px 0;
+}
+
+.cliente-admin strong {
+    font-weight: 600;
+}
+/* ==========================================
+   MODAL HISTORIAL DE CLIENTE
+========================================== */
+
+.modal-historial {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.contenido-modal-historial {
+    position: relative;
+    width: 100%;
+    max-width: 750px;
+    max-height: 85vh;
+    overflow-y: auto;
+    background: white;
+    border-radius: 14px;
+    padding: 30px;
+    box-sizing: border-box;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+}
+
+.contenido-modal-historial h2 {
+    margin-top: 0;
+    margin-bottom: 25px;
+    font-size: 26px;
+}
+
+.cerrar-modal-historial {
+    position: absolute;
+    top: 15px;
+    right: 18px;
+    border: none;
+    background: transparent;
+    font-size: 30px;
+    line-height: 1;
+    cursor: pointer;
+    color: #555;
+}
+
+.cerrar-modal-historial:hover {
+    color: #e00000;
+}
+
+/* PEDIDO DENTRO DEL HISTORIAL */
+
+.pedido-historial {
+    padding: 20px;
+    margin-bottom: 15px;
+    background: #fafafa;
+    border: 1px solid #e2e2e2;
+    border-left: 5px solid #e00000;
+    border-radius: 10px;
+}
+
+.encabezado-pedido-historial {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.encabezado-pedido-historial h3 {
+    margin: 0;
+}
+
+.estado-historial {
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Pedido pendiente */
+.estado-pendiente {
+    background: #fff3cd;
+    color: #856404;
+}
+
+/* Pedido en preparación */
+.estado-en-preparación {
+    background: #cfe2ff;
+    color: #084298;
+}
+
+/* Pedido listo */
+.estado-listo {
+    background: #d1e7dd;
+    color: #0f5132;
+}
+
+/* Pedido entregado */
+.estado-entregado {
+    background: #e2e3e5;
+    color: #41464b;
+}
+.pedido-historial p {
+    margin: 7px 0;
+}
+
+/* PRODUCTOS */
+
+.productos-historial {
+    margin-top: 18px;
+    padding-top: 15px;
+    border-top: 1px solid #ddd;
+}
+
+.producto-historial {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.producto-historial:last-child {
+    border-bottom: none;
+}
+
+/* TOTAL */
+
+.total-historial {
+    margin-top: 18px;
+    padding-top: 15px;
+    border-top: 1px solid #ddd;
+    text-align: right;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* BOTÓN HISTORIAL */
+
+.btn-historial-cliente {
+    margin-top: 15px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    background: #e00000;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-historial-cliente:hover {
+    background: #b80000;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 600px) {
+
+    .contenido-modal-historial {
+        padding: 20px;
+        max-height: 90vh;
+    }
+
+    .encabezado-pedido-historial {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .producto-historial {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+}
+/* ==========================================
+   NAVEGACIÓN ERP - MES - PROCESO
+========================================== */
+
+.navegacion-modulos {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin: 25px auto 35px;
+    padding: 10px;
+}
+
+.boton-modulo {
+    padding: 14px 35px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background: #f5f5f5;
+    color: #333;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.boton-modulo:hover {
+    background: #e9e9e9;
+}
+
+.boton-modulo.activo {
+    background: #e00000;
+    border-color: #e00000;
+    color: white;
+}
+
+@media (max-width: 600px) {
+
+    .navegacion-modulos {
+        flex-direction: column;
+    }
+
+    .boton-modulo {
+        width: 100%;
+    }
+
+}
+/* ==========================================
+   TRAZABILIDAD DE PRODUCCIÓN
+   ========================================== */
+
+.seccion-trazabilidad {
+    max-width: 1000px;
+    margin: 30px auto;
+    padding: 30px;
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.10);
+}
+
+.seccion-trazabilidad h2 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    font-size: 28px;
+}
+
+.seccion-trazabilidad > p {
+    color: #555;
+    margin-bottom: 25px;
+}
+
+/* TARJETA DEL PEDIDO */
+
+.trazabilidad-pedido {
+    background: #fafafa;
+    border: 1px solid #e2e2e2;
+    border-left: 5px solid #e00000;
+    border-radius: 10px;
+    padding: 22px;
+    margin-bottom: 20px;
+}
+
+/* ENCABEZADO */
+
+.cabecera-trazabilidad {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.cabecera-trazabilidad h3 {
+    margin: 0;
+    font-size: 21px;
+}
+
+.cabecera-trazabilidad span {
+    padding: 7px 14px;
+    border-radius: 20px;
+    background: #f9b44a;
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* DATOS */
+
+.trazabilidad-pedido p {
+    margin: 7px 0;
+}
+
+.trazabilidad-pedido h4 {
+    margin-top: 25px;
+    margin-bottom: 15px;
+    font-size: 17px;
+}
+
+/* LISTA DE ETAPAS */
+
+.lista-trazabilidad-etapas {
+    position: relative;
+    margin-top: 15px;
+    padding-left: 25px;
+}
+
+/* LÍNEA VERTICAL */
+
+.lista-trazabilidad-etapas::before {
+    content: "";
+    position: absolute;
+    left: 8px;
+    top: 10px;
+    bottom: 10px;
+    width: 3px;
+    background: #ddd;
+}
+
+/* CADA ETAPA */
+
+.trazabilidad-etapa {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 48px;
+    margin-bottom: 5px;
+    padding: 8px 12px 8px 20px;
+    background: white;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+}
+
+/* CÍRCULO DE LA ETAPA */
+
+.trazabilidad-etapa::before {
+    content: "";
+    position: absolute;
+    left: -24px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #ccc;
+    border: 3px solid white;
+    box-shadow: 0 0 0 1px #ccc;
+}
+
+/* TEXTO */
+
+.trazabilidad-etapa span {
+    font-weight: 500;
+}
+
+.trazabilidad-etapa strong {
+    font-size: 13px;
+    padding: 6px 10px;
+    border-radius: 6px;
+}
+
+/* COMPLETADO */
+
+.trazabilidad-completado {
+    background: #dff5df;
+    color: #218838;
+}
+
+.trazabilidad-etapa:has(.trazabilidad-completado)::before {
+    background: #28a745;
+    box-shadow: 0 0 0 1px #28a745;
+}
+
+/* EN PROCESO */
+
+.trazabilidad-actual {
+    background: #f8d7da;
+    color: #b02a37;
+}
+
+.trazabilidad-etapa:has(.trazabilidad-actual)::before {
+    background: #e00000;
+    box-shadow: 0 0 0 1px #e00000;
+}
+
+/* PENDIENTE */
+
+.trazabilidad-pendiente {
+    background: #eeeeee;
+    color: #666;
+}
+
+/* EFECTO EN LA ETAPA ACTUAL */
+
+.trazabilidad-etapa:has(.trazabilidad-actual) {
+    border: 1px solid #e00000;
+    background: #fff5f5;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 600px) {
+
+    .seccion-trazabilidad {
+        margin: 20px 10px;
+        padding: 20px;
+    }
+
+    .cabecera-trazabilidad {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .trazabilidad-etapa {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+}

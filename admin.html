@@ -60,24 +60,139 @@
             <h1>
                 Panel administrativo
             </h1>
+            <!-- NAVEGACIÓN DE MÓDULOS -->
 
-            <p class="subtitulo-admin">
-                Pedidos recibidos de los clientes
-            </p>
+<div class="navegacion-modulos">
 
+    <button
+        class="boton-modulo activo"
+        onclick="mostrarModulo('erp')"
+    >
+        ERP
+    </button>
 
-            <!-- CONTENEDOR DE PEDIDOS -->
+    <button
+        class="boton-modulo"
+        onclick="mostrarModulo('mes')"
+    >
+        MES
+    </button>
 
-            <div id="lista-admin">
+    <button
+        class="boton-modulo"
+        onclick="mostrarModulo('proceso')"
+    >
+        PROCESO
+    </button>
 
-                <p>
-                    Cargando pedidos...
-                </p>
+</div>
 
-            </div>
+   <!-- GESTIÓN DE PRODUCCIÓN -->
+
+<div class="modulo-contenido" data-modulo="mes">
+
+    <h2>Gestión de producción</h2>
+
+    <p>
+        Gestión de los pedidos autorizados por ERP para iniciar la producción.
+    </p>
+
+    <div class="resumen-produccion-mes">
+
+        <strong id="pedidos-autorizados-mes">
+            0
+        </strong>
+
+        <span>
+            Pedidos autorizados
+        </span>
+
+    </div>
+
+    <div id="lista-admin">
+
+        <p>
+            Cargando pedidos...
+        </p>
+
+    </div>
+
+</div>
+            <!-- PLANIFICACIÓN DE PRODUCCIÓN -->
+
+<section class="seccion-planificacion" data-modulo="erp">
+
+    <h2>Planificación de producción</h2>
+
+    <p>
+        Organización de los pedidos pendientes para planificar la producción.
+    </p>
+
+    <div class="resumen-planificacion">
+
+    <div class="dato-planificacion">
+        <strong id="pedidos-pendientes-plan">0</strong>
+        <span>Pedidos pendientes</span>
+    </div>
+
+    <div class="dato-planificacion">
+        <strong id="medallones-plan">0</strong>
+        <span>Medallones a producir</span>
+    </div>
+
+    <div class="dato-planificacion">
+        <strong id="res-plan">0</strong>
+        <span>Medallones de res</span>
+    </div>
+
+    <div class="dato-planificacion">
+        <strong id="cerdo-plan">0</strong>
+        <span>Medallones de cerdo</span>
+    </div>
+
+    <div class="dato-planificacion">
+        <strong id="mixto-plan">0</strong>
+        <span>Medallones mixtos</span>
+    </div>
+
+</div>
+
+    <div id="lista-planificacion">
+
+        <p>
+            No hay pedidos pendientes de producción.
+        </p>
+
+    </div>
+    <!-- MATERIAS PRIMAS NECESARIAS -->
+<div class="materias-primas-plan">
+
+    <h3>Materias primas necesarias</h3>
+
+    <div id="lista-materias-primas">
+        <p>Calculando materias primas...</p>
+    </div>
+
+</div>
+
+</section>
+<!-- GESTIÓN DE CLIENTES -->
+<section class="seccion-clientes" data-modulo="erp">
+
+    <h2>Gestión de clientes</h2>
+
+    <p>
+        Información de los clientes registrados mediante sus pedidos.
+    </p>
+
+    <div id="lista-clientes">
+        <p>Cargando clientes...</p>
+    </div>
+
+</section>
             <!-- PEDIDOS ENTREGADOS -->
 
-<section class="seccion-entregados">
+<section class="seccion-entregados" data-modulo="erp">
 
     <h2>Pedidos entregados</h2>
 
@@ -91,7 +206,12 @@
 
 </section>
             <!-- PROCESO DE PRODUCCIÓN -->
-<section id="proceso-produccion" class="proceso-produccion" style="display: none;">
+<section
+    id="proceso-produccion"
+    class="proceso-produccion"
+    data-modulo="proceso"
+    style="display: none;"
+>
 
     <div class="proceso-encabezado">
         <h2>Proceso de producción</h2>
@@ -156,22 +276,122 @@
 </div>
 
 </section>
-            <!-- INVENTARIO -->
+ 
+<!-- DISPONIBILIDAD DE MATERIAS PRIMAS -->
 
-<section class="inventario-admin">
+<section
+    class="disponibilidad-materias-plan"
+    data-modulo="mes"
+>
 
-    <h2>Inventario de materias primas</h2>
+    <h2>Disponibilidad de materias primas</h2>
 
-    <div id="lista-inventario">
+    <div id="lista-disponibilidad-materias">
 
         <p>
-            Cargando inventario...
+            Consultando inventario...
         </p>
 
     </div>
 
 </section>
+<!-- TRAZABILIDAD -->
+
+<section class="seccion-trazabilidad" data-modulo="mes">
+
+    <h2>Trazabilidad de producción</h2>
+
+    <p>
+        Seguimiento del recorrido de los pedidos desde ERP hasta el proceso de producción.
+    </p>
+
+    <div id="lista-trazabilidad">
+
+        <p>
+            Cargando trazabilidad...
+        </p>
+
+    </div>
+
 </section>
+<!-- CONTROL DE INVENTARIO -->
+
+<section class="seccion-control-inventario" data-modulo="mes">
+
+    <h2>Control de inventario</h2>
+
+    <p>
+        Control de las materias primas disponibles y necesarias para la producción.
+    </p>
+
+    <div id="lista-control-inventario">
+
+        <p>
+            Consultando inventario...
+        </p>
+
+    </div>
+
+</section>
+<!-- REFRIGERACIÓN -->
+
+<section class="seccion-refrigeracion" data-modulo="mes">
+
+    <h2>Control de refrigeración</h2>
+
+    <p>
+        Control de la temperatura durante la etapa de enfriamiento.
+    </p>
+
+    <div class="panel-refrigeracion">
+
+        <div class="dato-refrigeracion">
+
+            <span>Temperatura actual</span>
+
+            <strong id="temperatura-refrigeracion">
+                -- °C
+            </strong>
+
+        </div>
+
+        <div class="dato-refrigeracion">
+
+            <span>Límite máximo</span>
+
+            <strong id="limite-refrigeracion">
+                -- °C
+            </strong>
+
+        </div>
+
+        <div class="dato-refrigeracion">
+
+            <span>Estado</span>
+
+            <strong id="estado-refrigeracion">
+                -- 
+            </strong>
+
+        </div>
+
+    </div>
+
+    <div class="controles-refrigeracion">
+
+        <button
+            onclick="activarRefrigeracion()"
+        >
+            Activar refrigeración
+        </button>
+
+        <button
+            onclick="desactivarRefrigeracion()"
+        >
+            Desactivar refrigeración
+        </button>
+
+    </div>
 
 </section>
 
@@ -217,7 +437,27 @@
     }
 
 </script>
+<!-- MODAL HISTORIAL DE CLIENTE -->
+<div id="modal-historial-cliente" class="modal-historial">
 
+    <div class="contenido-modal-historial">
+
+        <button
+            class="cerrar-modal-historial"
+            onclick="cerrarHistorialCliente()"
+        >
+            ×
+        </button>
+
+        <h2>Historial de pedidos</h2>
+
+        <div id="contenido-historial-cliente">
+            <p>Cargando pedidos...</p>
+        </div>
+
+    </div>
+
+</div>
 </body>
 
 </html>

@@ -86,94 +86,116 @@
     </button>
 
 </div>
+<!-- MÓDULO MES -->
+<div data-modulo="mes">
 
-   <!-- GESTIÓN DE PRODUCCIÓN -->
+    <!-- ÓRDENES DE PRODUCCIÓN -->
 
-<div class="modulo-contenido" data-modulo="mes">
+    <div class="ordenes-produccion-mes">
 
-    <h2>Gestión de producción</h2>
+        <div class="titulo-ordenes-mes">
 
-    <p>
-        Gestión de los pedidos autorizados por ERP para iniciar la producción.
-    </p>
+            <div>
 
-    <div class="resumen-produccion-mes">
+                <h2>Órdenes de producción</h2>
 
-        <strong id="pedidos-autorizados-mes">
-            0
-        </strong>
+                <p>
+                    Órdenes enviadas desde ERP para fabricación
+                    de producto terminado.
+                </p>
 
-        <span>
-            Pedidos autorizados
+            </div>
+
+            <span class="estado-mes">
+                MES
+            </span>
+
+        </div>
+
+        <div id="lista-ordenes-produccion-mes">
+            <p>Cargando órdenes de producción...</p>
+        </div>
+
+    </div>
+
+
+    <!-- PRODUCCIÓN TERMINADA -->
+
+    <section class="panel-produccion-terminada">
+
+        <div class="produccion-terminada-titulo">
+
+            <div>
+                <h2>Producción terminada</h2>
+
+                <p>
+                    Lotes terminados reportados desde el proceso
+                    de producción.
+                </p>
+            </div>
+
+            <span class="etiqueta-mes-principal">
+                MES
+            </span>
+
+        </div>
+
+        <div id="lista-produccion-terminada-mes"></div>
+
+    </section>
+
+</div>
+<!-- STOCK DE PRODUCTOS TERMINADOS -->
+<section class="seccion-stock-productos" data-modulo="erp">
+
+    <div class="cabecera-stock-productos">
+        <div>
+            <h2>Stock de productos terminados</h2>
+            <p>
+                Cantidad disponible de medallones listos para la venta.
+            </p>
+        </div>
+
+        <button
+            class="boton-actualizar-stock"
+            onclick="cargarStockProductos()"
+        >
+            Actualizar stock
+        </button>
+    </div>
+
+    <div id="lista-stock-productos" class="lista-stock-productos">
+        <p>Cargando stock...</p>
+    </div>
+
+</section>
+<!-- PEDIDOS DE CLIENTES - ERP -->
+
+<section class="seccion-pedidos-erp" data-modulo="erp">
+
+    <div class="cabecera-pedidos-erp">
+
+        <div>
+            <h2>Pedidos de clientes</h2>
+
+            <p>
+                Consulta de pedidos y disponibilidad de producto terminado.
+            </p>
+        </div>
+
+        <span class="estado-erp">
+            ERP
         </span>
 
     </div>
 
-    <div id="lista-admin">
+    <div id="lista-pedidos-erp">
 
         <p>
             Cargando pedidos...
         </p>
 
     </div>
-
-</div>
-            <!-- PLANIFICACIÓN DE PRODUCCIÓN -->
-
-<section class="seccion-planificacion" data-modulo="erp">
-
-    <h2>Planificación de producción</h2>
-
-    <p>
-        Organización de los pedidos pendientes para planificar la producción.
-    </p>
-
-    <div class="resumen-planificacion">
-
-    <div class="dato-planificacion">
-        <strong id="pedidos-pendientes-plan">0</strong>
-        <span>Pedidos pendientes</span>
-    </div>
-
-    <div class="dato-planificacion">
-        <strong id="medallones-plan">0</strong>
-        <span>Medallones a producir</span>
-    </div>
-
-    <div class="dato-planificacion">
-        <strong id="res-plan">0</strong>
-        <span>Medallones de res</span>
-    </div>
-
-    <div class="dato-planificacion">
-        <strong id="cerdo-plan">0</strong>
-        <span>Medallones de cerdo</span>
-    </div>
-
-    <div class="dato-planificacion">
-        <strong id="mixto-plan">0</strong>
-        <span>Medallones mixtos</span>
-    </div>
-
-</div>
-
-    <div id="lista-planificacion">
-
-        <p>
-            No hay pedidos pendientes de producción.
-        </p>
-
-    </div>
-    <!-- MATERIAS PRIMAS NECESARIAS -->
-<div class="materias-primas-plan">
-
-    <h3>Materias primas necesarias</h3>
-
-    <div id="lista-materias-primas">
-        <p>Calculando materias primas...</p>
-    </div>
-
-</div>
 
 </section>
 <!-- GESTIÓN DE CLIENTES -->
@@ -191,7 +213,38 @@
 
 </section>
             <!-- PEDIDOS ENTREGADOS -->
+            
+<!-- SOLICITUDES DE COMPRA -->
 
+<section class="seccion-solicitudes-compra" data-modulo="erp">
+
+    <div class="cabecera-solicitudes-compra">
+
+        <div>
+
+            <h2>Solicitudes de compra</h2>
+
+            <p>
+                Materias primas pendientes de abastecimiento para producción.
+            </p>
+
+        </div>
+
+        <span class="estado-erp">
+            ERP
+        </span>
+
+    </div>
+
+    <div id="lista-solicitudes-compra">
+
+        <p>
+            Cargando solicitudes de compra...
+        </p>
+
+    </div>
+
+</section>
 <section class="seccion-entregados" data-modulo="erp">
 
     <h2>Pedidos entregados</h2>
@@ -205,11 +258,330 @@
     </div>
 
 </section>
+<!-- GESTIÓN COMERCIAL Y FINANCIERA -->
+
+<section class="seccion-comercial-erp" data-modulo="erp">
+
+    <div class="cabecera-comercial-erp">
+
+        <div>
+
+            <h2>
+                Gestión comercial y financiera
+            </h2>
+
+            <p>
+                Seguimiento de las ventas realizadas y resultados
+                económicos de BurguerTech.
+            </p>
+
+        </div>
+
+        <span class="estado-erp">
+            ERP
+        </span>
+
+    </div>
+
+
+    <!-- INDICADORES -->
+
+    <div class="indicadores-comerciales">
+
+        <div class="indicador-comercial">
+
+            <span class="icono-indicador">
+                $
+            </span>
+
+            <div>
+
+                <span>
+                    Ventas registradas
+                </span>
+
+                <strong id="ventas-registradas">
+                    0
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <div class="indicador-comercial">
+
+            <span class="icono-indicador">
+                $
+            </span>
+
+            <div>
+
+                <span>
+                    Ingresos generados
+                </span>
+
+                <strong id="ingresos-generados">
+                    $0
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <div class="indicador-comercial">
+
+            <span class="icono-indicador">
+                ✓
+            </span>
+
+            <div>
+
+                <span>
+                    Pedidos entregados
+                </span>
+
+                <strong id="pedidos-entregados-contabilidad">
+                    0
+                </strong>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- FLUJO COMERCIAL -->
+
+    <div class="flujo-comercial-erp">
+
+        <div class="paso-comercial paso-despacho">
+
+    <span>1</span>
+
+    <strong>Despachar pedido</strong>
+
+    <small>Producto entregado</small>
+
+    <div class="datos-paso-comercial">
+
+        <div>
+            <label>Listos</label>
+            <strong id="pedidos-listos">0</strong>
+        </div>
+
+        <div>
+            <label>Entregados</label>
+            <strong id="pedidos-entregados">0</strong>
+        </div>
+
+        <div>
+            <label>Medallones</label>
+            <strong id="medallones-despachados">0</strong>
+        </div>
+
+    </div>
+
+    <button
+        class="boton-paso-comercial"
+        onclick="mostrarDespachosComerciales()"
+    >
+        Ver despachos
+    </button>
+
+</div>
+
+
+        <div class="flecha-comercial">
+            →
+        </div>
+
+
+        <div class="paso-comercial paso-venta">
+
+    <span>2</span>
+
+    <strong>Registrar venta</strong>
+
+    <small>Venta registrada</small>
+
+    <div class="datos-paso-comercial">
+
+        <div>
+            <label>Ventas</label>
+            <strong id="ventas-paso">0</strong>
+        </div>
+
+        <div>
+            <label>Ingresos</label>
+            <strong id="ingresos-paso">$0</strong>
+        </div>
+
+        <div>
+            <label>Medallones</label>
+            <strong id="medallones-paso">0</strong>
+        </div>
+
+    </div>
+
+    <button
+        class="boton-paso-comercial"
+        onclick="mostrarVentasComerciales()"
+    >
+        Ver ventas
+    </button>
+
+</div>
+
+
+        <div class="flecha-comercial">
+            →
+        </div>
+
+
+        <div class="paso-comercial paso-contabilidad">
+
+    <span>3</span>
+
+    <strong>Actualizar contabilidad</strong>
+
+    <small>Ingreso contabilizado</small>
+
+    <div class="datos-paso-comercial">
+
+        <div>
+            <label>Ingresos</label>
+            <strong id="ingresos-contabilidad">$0</strong>
+        </div>
+
+        <div>
+            <label>Operaciones</label>
+            <strong id="operaciones-contabilidad">0</strong>
+        </div>
+
+        <div>
+            <label>Promedio</label>
+            <strong id="promedio-contabilidad">$0</strong>
+        </div>
+
+    </div>
+
+    <button
+        class="boton-paso-comercial"
+        onclick="mostrarMovimientosContables()"
+    >
+        Ver movimientos
+    </button>
+
+</div>
+
+
+        <div class="flecha-comercial">
+            →
+        </div>
+
+
+        <div class="paso-comercial">
+
+    <span>4</span>
+
+    <strong>
+        Generar reportes
+    </strong>
+
+    <small>
+        Información financiera
+    </small>
+
+    <button class="boton-generar-reporte" onclick="mostrarGeneradorReportes()">
+    Generar reporte
+</button>
+    <button
+    class="boton-descargar-pdf"
+    onclick="descargarReportePDF()"
+>
+    Descargar PDF
+</button>
+
+</div>
+
+    </div>
+
+
+    <!-- GRÁFICA -->
+
+    <div class="grafica-ventas-erp">
+
+        <div class="titulo-grafica-erp">
+
+            <div>
+
+                <h3>
+                    Ventas por producto
+                </h3>
+
+                <p>
+                    Cantidad de medallones vendidos
+                    en pedidos entregados.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div
+            id="grafica-ventas-productos"
+            class="grafica-barras-erp"
+        >
+
+            <p>
+                Cargando información de ventas...
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- LOTES DE PRODUCCIÓN -->
+
+<section class="seccion-lotes-proceso" data-modulo="proceso">
+
+    <div class="cabecera-lotes-proceso">
+
+        <div>
+
+            <h2>Lotes de producción</h2>
+
+            <p>
+                Lotes liberados desde MES para iniciar el proceso de fabricación.
+            </p>
+
+        </div>
+
+        <span class="estado-proceso">
+            PROCESO
+        </span>
+
+    </div>
+
+    <div id="lista-lotes-proceso">
+
+        <p>
+            Cargando lotes de producción...
+        </p>
+
+    </div>
+
+</section>
             <!-- PROCESO DE PRODUCCIÓN -->
 <section
     id="proceso-produccion"
     class="proceso-produccion"
-    data-modulo="proceso"
     style="display: none;"
 >
 
@@ -218,44 +590,49 @@
         <p id="proceso-pedido">Pedido #</p>
     </div>
 
-    <div class="proceso-etapas">
+        <div class="proceso-etapas">
 
-        <div class="etapa-proceso activa">
-            <span>1</span>
-            <p>Preparación</p>
-        </div>
-
-        <div class="etapa-proceso">
-            <span>2</span>
-            <p>Molido</p>
-        </div>
-
-        <div class="etapa-proceso">
-            <span>3</span>
-            <p>Mezclado</p>
-        </div>
-
-        <div class="etapa-proceso">
-            <span>4</span>
-            <p>Formado</p>
-        </div>
-
-        <div class="etapa-proceso">
-            <span>5</span>
-            <p>Enfriamiento</p>
-        </div>
-
-        <div class="etapa-proceso">
-            <span>6</span>
-            <p>Empaque</p>
-        </div>
-
-        <div class="etapa-proceso">
-            <span>7</span>
-            <p>Etiquetado</p>
-        </div>
-
+    <div class="etapa-proceso activa">
+        <span>1</span>
+        <p>Molido</p>
     </div>
+
+    <div class="etapa-proceso">
+        <span>2</span>
+        <p>Mezclado</p>
+    </div>
+
+    <div class="etapa-proceso">
+        <span>3</span>
+        <p>Formado</p>
+    </div>
+
+    <div class="etapa-proceso">
+        <span>4</span>
+        <p>Control de calidad</p>
+    </div>
+
+    <div class="etapa-proceso">
+        <span>5</span>
+        <p>Enfriamiento</p>
+    </div>
+
+    <div class="etapa-proceso">
+        <span>6</span>
+        <p>Control de refrigeración</p>
+    </div>
+
+    <div class="etapa-proceso">
+        <span>8</span>
+        <p>Empaquetado</p>
+    </div>
+
+<div class="etapa-proceso">
+    <div class="numero-etapa">8</div>
+    <span>Etiquetado</span>
+</div>
+
+</div>
 
     <div id="animacion-proceso" class="animacion-proceso">
 
@@ -276,25 +653,6 @@
 </div>
 
 </section>
- 
-<!-- DISPONIBILIDAD DE MATERIAS PRIMAS -->
-
-<section
-    class="disponibilidad-materias-plan"
-    data-modulo="mes"
->
-
-    <h2>Disponibilidad de materias primas</h2>
-
-    <div id="lista-disponibilidad-materias">
-
-        <p>
-            Consultando inventario...
-        </p>
-
-    </div>
-
-</section>
 <!-- TRAZABILIDAD -->
 
 <section class="seccion-trazabilidad" data-modulo="mes">
@@ -305,93 +663,36 @@
         Seguimiento del recorrido de los pedidos desde ERP hasta el proceso de producción.
     </p>
 
-    <div id="lista-trazabilidad">
+    <div class="trazabilidad-busqueda">
 
-        <p>
-            Cargando trazabilidad...
-        </p>
+    <label for="codigo-lote-trazabilidad">
+        Código del lote
+    </label>
 
-    </div>
+    <div class="trazabilidad-formulario">
 
-</section>
-<!-- CONTROL DE INVENTARIO -->
-
-<section class="seccion-control-inventario" data-modulo="mes">
-
-    <h2>Control de inventario</h2>
-
-    <p>
-        Control de las materias primas disponibles y necesarias para la producción.
-    </p>
-
-    <div id="lista-control-inventario">
-
-        <p>
-            Consultando inventario...
-        </p>
-
-    </div>
-
-</section>
-<!-- REFRIGERACIÓN -->
-
-<section class="seccion-refrigeracion" data-modulo="mes">
-
-    <h2>Control de refrigeración</h2>
-
-    <p>
-        Control de la temperatura durante la etapa de enfriamiento.
-    </p>
-
-    <div class="panel-refrigeracion">
-
-        <div class="dato-refrigeracion">
-
-            <span>Temperatura actual</span>
-
-            <strong id="temperatura-refrigeracion">
-                -- °C
-            </strong>
-
-        </div>
-
-        <div class="dato-refrigeracion">
-
-            <span>Límite máximo</span>
-
-            <strong id="limite-refrigeracion">
-                -- °C
-            </strong>
-
-        </div>
-
-        <div class="dato-refrigeracion">
-
-            <span>Estado</span>
-
-            <strong id="estado-refrigeracion">
-                -- 
-            </strong>
-
-        </div>
-
-    </div>
-
-    <div class="controles-refrigeracion">
+        <input
+            type="text"
+            id="codigo-lote-trazabilidad"
+            placeholder="Ej: LT-OP1-20260927-135753"
+        >
 
         <button
-            onclick="activarRefrigeracion()"
+            type="button"
+            onclick="consultarTrazabilidadLote()"
         >
-            Activar refrigeración
-        </button>
-
-        <button
-            onclick="desactivarRefrigeracion()"
-        >
-            Desactivar refrigeración
+            Consultar lote
         </button>
 
     </div>
+
+</div>
+
+<div id="lista-trazabilidad">
+    <p>
+        Ingresa un código de lote para consultar su trazabilidad.
+    </p>
+</div>
 
 </section>
 

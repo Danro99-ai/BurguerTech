@@ -264,7 +264,1827 @@ app.post("/api/logout", (req, res) => {
 
 });
 
+// ==========================================
+// CONSULTAR STOCK DE PRODUCTOS TERMINADOS
+// ==========================================
 
+app.get("/api/stock-productos", async (req, res) => {
+
+    if (!req.session.usuario) {
+        return res.status(401).json({
+            mensaje: "Debes iniciar sesión."
+        });
+    }
+
+    try {
+
+        const resultado = await pool.query(`
+            SELECT
+                producto,
+                nombre,
+                pack,
+                peso_gramos,
+                cantidad_packs
+            FROM stock_productos
+            ORDER BY id ASC
+        `);
+
+        const stock = resultado.rows.map(item => ({
+            producto: item.producto,
+            nombre: item.nombre,
+            pack: Number(item.pack),
+            pesoGramos: Number(item.peso_gramos),
+            cantidadPacks: Number(item.cantidad_packs)
+        }));
+
+        res.json(stock);
+
+    } catch (error) {
+
+        console.error(
+            "Error consultando stock:",
+            error
+        );
+
+        res.status(500).json({
+            mensaje: "No se pudo consultar el stock."
+        });
+
+    }
+
+});
+// ==========================================
+// RESUMEN COMERCIAL DEL ERP
+// ==========================================
+
+app.get("/api/resumen-comercial", async (req, res) => {
+
+    if (!req.session.usuario) {
+        return res.status(401).json({
+            mensaje: "Debes iniciar sesión."
+        });
+    }
+
+    try {
+
+        const resultado =
+            await pool.query(`
+                SELECT
+                    id,
+                    productos,
+                    total
+                FROM pedidos
+                WHERE estado = 'Entregado'
+                ORDER BY fecha ASC
+            `);
+
+        const pedidos = resultado.rows;
+
+        let ventasRegistradas = pedidos.length;
+
+        let ingresosGenerados = 0;
+
+        let pedidosEntregados = pedidos.length;
+
+        const ventasPorProducto = {
+            res: {
+                nombre: "Carne de res",
+                cantidad: 0
+            },
+
+            cerdo: {
+                nombre: "Carne de cerdo",
+                cantidad: 0
+            },
+
+            mixto: {
+                nombre: "Medallón mixto",
+                cantidad: 0
+            }
+        };
+
+
+        pedidos.forEach(pedido => {
+
+            ingresosGenerados += Number(pedido.total);
+
+            pedido.productos.forEach(producto => {
+
+                const cantidadMedallones =
+                    Number(producto.pack) *
+                    Number(producto.cantidad);
+
+                if (
+                    ventasPorProducto[producto.producto]
+                ) {
+
+                    ventasPorProducto[
+                        producto.producto
+                    ].cantidad += cantidadMedallones;
+
+                }
+
+            });
+
+        });
+
+
+        res.json({
+
+            ventasRegistradas,
+
+            ingresosGenerados,
+
+            pedidosEntregados,
+
+            ventasPorProducto:
+                Object.values(ventasPorProducto)
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Error consultando resumen comercial:",
+            error
+        );
+
+        res.status(500).json({
+
+            mensaje:
+                "No se pudo consultar el resumen comercial."
+
+        });
+
+    }
+
+});
+// ==========================================
+// DESPACHAR PEDIDO DESDE ERP
+// ==========================================
+
+app.put("/api/pedidos/:id/despachar", async (req, res) => {
+
+    if (!req.session.usuario) {
+        return res.status(401).json({
+            mensaje: "Debes iniciar sesión."
+        });
+    }
+
+    const id = Number(req.params.id);
+
+    if (!Number.isInteger(id)) {
+        return res.status(400).json({
+            mensaje: "El número de pedido no es válido."
+        });
+    }
+
+    const cliente = await pool.connect();
+
+    try {
+
+        await cliente.query("BEGIN");
+
+        // Buscar pedido
+        const pedidoResultado = await cliente.query(`
+            SELECT
+                id,
+                productos,
+                estado
+            FROM pedidos
+            WHERE id = $1
+            FOR UPDATE
+        `, [id]);
+
+        if (pedidoResultado.rows.length === 0) {
+
+            await cliente.query("ROLLBACK");
+
+            return res.status(404).json({
+                mensaje: "Pedido no encontrado."
+            });
+        }
+
+        const pedido =
+            pedidoResultado.rows[0];
+
+        // Solo se pueden despachar pedidos pendientes
+        if (pedido.estado !== "Pendiente") {
+
+            await cliente.query("ROLLBACK");
+
+            return res.status(400).json({
+                mensaje:
+                    "El pedido no está disponible para despacho."
+            });
+        }
+
+        const productos =
+            pedido.productos;
+
+        // ==========================================
+        // COMPROBAR TODO EL STOCK ANTES DE DESCONTAR
+        // ==========================================
+
+        for (const producto of productos) {
+
+            const cantidadNecesaria =
+                Number(producto.pack) *
+                Number(producto.cantidad);
+
+            const stockResultado =
+    await cliente.query(`
+        SELECT
+            producto,
+            nombre,
+            pack,
+            cantidad_packs
+        FROM stock_productos
+        WHERE producto = $1
+          AND pack = $2
+        FOR UPDATE
+    `, [
+        producto.producto,
+        Number(producto.pack)
+    ]);
+
+            if (stockResultado.rows.length === 0) {
+
+                await cliente.query("ROLLBACK");
+
+                return res.status(400).json({
+                    mensaje:
+                        `No existe stock configurado para ${producto.nombre}.`
+                });
+            }
+
+            const stock =
+    Number(
+        stockResultado.rows[0]
+            .cantidad_packs
+    );
+
+const paquetesNecesarios =
+    Number(producto.cantidad);
+
+if (stock < paquetesNecesarios) {
+
+                await cliente.query("ROLLBACK");
+
+                return res.status(400).json({
+                    mensaje:
+    `Stock insuficiente de ${producto.nombre} Pack x${producto.pack}. ` +
+    `Disponible: ${stock} paquetes. ` +
+    `Necesario: ${paquetesNecesarios} paquetes.`
+                });
+            }
+        }
+
+        // ==========================================
+        // DESCONTAR STOCK
+        // ==========================================
+
+        for (const producto of productos) {
+
+            const cantidadNecesaria =
+                Number(producto.pack) *
+                Number(producto.cantidad);
+
+           await cliente.query(`
+    UPDATE stock_productos
+    SET cantidad_packs =
+        cantidad_packs - $1
+    WHERE producto = $2
+      AND pack = $3
+`, [
+    Number(producto.cantidad),
+    producto.producto,
+    Number(producto.pack)
+]);
+        }
+
+        // ==========================================
+        // ACTUALIZAR ESTADO DEL PEDIDO
+        // ==========================================
+
+        const pedidoActualizado =
+            await cliente.query(`
+                UPDATE pedidos
+SET estado = 'Entregado'
+WHERE id = $1
+                RETURNING id, estado
+            `, [id]);
+
+        await cliente.query("COMMIT");
+
+        res.json({
+            mensaje:
+                "Pedido despachado correctamente.",
+            pedido:
+                pedidoActualizado.rows[0]
+        });
+
+    } catch (error) {
+
+        await cliente.query("ROLLBACK");
+
+        console.error(
+            "Error despachando pedido:",
+            error
+        );
+
+        res.status(500).json({
+            mensaje:
+                "No se pudo despachar el pedido."
+        });
+
+    } finally {
+
+        cliente.release();
+
+    }
+
+});
+// ==========================================
+// CREAR ORDEN DE PRODUCCIÓN PARA MES
+// ==========================================
+
+app.post("/api/ordenes-produccion", async (req, res) => {
+
+    if (!req.session.usuario) {
+        return res.status(401).json({
+            mensaje: "Debes iniciar sesión."
+        });
+    }
+
+    const {
+    producto,
+    nombre,
+    cantidad,
+    pack,
+    cantidadPacks
+} = req.body;
+
+    const cantidadMedallones =
+    Number(cantidad);
+
+const packNumero =
+    Number(pack);
+
+const cantidadPacksNumero =
+    Number(cantidadPacks);
+
+    if (!producto || !nombre) {
+        return res.status(400).json({
+            mensaje: "Faltan datos del producto."
+        });
+    }
+
+    if (
+        !Number.isInteger(cantidadMedallones) ||
+        cantidadMedallones <= 0
+    ) {
+        return res.status(400).json({
+            mensaje: "La cantidad de medallones no es válida."
+        });
+    }
+    if (
+    !Number.isInteger(packNumero) ||
+    ![2, 4, 6, 8].includes(packNumero)
+) {
+    return res.status(400).json({
+        mensaje: "La presentación Pack no es válida."
+    });
+}
+
+if (
+    !Number.isInteger(cantidadPacksNumero) ||
+    cantidadPacksNumero <= 0
+) {
+    return res.status(400).json({
+        mensaje: "La cantidad de paquetes no es válida."
+    });
+}
+
+    try {
+
+        const resultado = await pool.query(`
+            INSERT INTO ordenes_produccion
+(
+    producto,
+    nombre,
+    cantidad_medallones,
+    pack,
+    cantidad_packs,
+    estado
+)
+VALUES ($1, $2, $3, $4, $5, 'Pendiente')
+            RETURNING
+                id,
+                producto,
+                nombre,
+                cantidad_medallones,
+                estado,
+                fecha
+        `, [
+    producto,
+    nombre,
+    cantidadMedallones,
+    packNumero,
+    cantidadPacksNumero
+]);
+
+        res.status(201).json({
+            mensaje: "Orden de producción creada correctamente.",
+            orden: resultado.rows[0]
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Error creando orden de producción:",
+            error
+        );
+
+        res.status(500).json({
+            mensaje: "No se pudo crear la orden de producción."
+        });
+
+    }
+
+});
+// ==========================================
+// CONSULTAR ÓRDENES DE PRODUCCIÓN PARA MES
+// ==========================================
+
+app.get("/api/ordenes-produccion", async (req, res) => {
+
+    if (!req.session.usuario) {
+        return res.status(401).json({
+            mensaje: "Debes iniciar sesión."
+        });
+    }
+
+    try {
+
+        const resultado = await pool.query(`
+    SELECT
+        op.id,
+        op.producto,
+        op.nombre,
+        op.cantidad_medallones,
+        op.estado,
+        op.fecha,
+        lp.codigo_lote
+    FROM ordenes_produccion op
+    LEFT JOIN lotes_produccion lp
+        ON lp.id_orden_produccion = op.id
+    WHERE op.estado NOT IN (
+        'Producción terminada'
+    )
+    ORDER BY op.id ASC
+`);
+
+        res.json(resultado.rows);
+
+    } catch (error) {
+
+        console.error(
+            "Error consultando órdenes de producción:",
+            error
+        );
+
+        res.status(500).json({
+            mensaje: "No se pudieron consultar las órdenes de producción."
+        });
+
+    }
+
+});
+// ==========================================
+// TRAZABILIDAD DE PRODUCCIÓN POR CÓDIGO DE LOTE
+// ==========================================
+
+app.get("/api/lotes-produccion/trazabilidad/:codigo", async (req, res) => {
+
+    if (!req.session.usuario) {
+        return res.status(401).json({
+            mensaje: "No autorizado."
+        });
+    }
+
+    const codigo = req.params.codigo.trim();
+
+    if (!codigo) {
+        return res.status(400).json({
+            mensaje: "Debes ingresar un código de lote."
+        });
+    }
+
+    try {
+
+        const resultado = await pool.query(`
+            SELECT
+                id,
+                codigo_lote,
+                id_orden_produccion,
+                producto,
+                nombre,
+                cantidad_medallones,
+                pack,
+                cantidad_packs,
+                fecha_inicio,
+                estado,
+                proceso,
+                stock_actualizado
+            FROM lotes_produccion
+            WHERE codigo_lote = $1
+        `, [codigo]);
+
+        if (resultado.rows.length === 0) {
+
+            return res.status(404).json({
+                mensaje: "No se encontró un lote con ese código."
+            });
+
+        }
+
+        res.json(resultado.rows[0]);
+
+    } catch (error) {
+
+        console.error(
+            "Error consultando trazabilidad del lote:",
+            error
+        );
+
+        res.status(500).json({
+            mensaje: "No se pudo consultar la trazabilidad del lote."
+        });
+
+    }
+
+});
+
+app.get("/api/lotes-produccion", async (req, res) => {
+
+    if (!req.session.usuario) {
+        return res.status(401).json({
+            mensaje: "No autorizado."
+        });
+    }
+
+    try {
+
+        const resultado = await pool.query(`
+    SELECT
+        id,
+        codigo_lote,
+        id_orden_produccion,
+        producto,
+        nombre,
+        cantidad_medallones,
+        pack,
+        cantidad_packs,
+        fecha_inicio,
+        estado,
+        proceso,
+        stock_actualizado
+    FROM lotes_produccion
+    WHERE estado NOT IN (
+        'Producción reportada',
+        'Stock actualizado'
+    )
+    ORDER BY id ASC
+`);
+
+        res.json(resultado.rows);
+
+    } catch (error) {
+
+        console.error(
+            "Error obteniendo lotes de producción:",
+            error
+        );
+
+        res.status(500).json({
+            mensaje: "Error al obtener los lotes de producción."
+        });
+
+    }
+
+});
+// ==========================================
+// ACTUALIZAR PROCESO DEL LOTE
+// ==========================================
+
+app.put("/api/lotes-produccion/:id/proceso", async (req, res) => {
+
+    if (!req.session.usuario) {
+
+        return res.status(401).json({
+            mensaje: "No autorizado."
+        });
+
+    }
+
+    try {
+
+        const id =
+            Number(req.params.id);
+
+        const proceso =
+            Number(req.body.proceso);
+
+        // ==========================================
+        // VALIDAR ID
+        // ==========================================
+
+        if (!Number.isInteger(id) || id <= 0) {
+
+            return res.status(400).json({
+                mensaje: "ID de lote no válido."
+            });
+
+        }
+
+        // ==========================================
+        // VALIDAR PROCESO
+        // ==========================================
+
+        if (
+            !Number.isInteger(proceso) ||
+            proceso < 0 ||
+            proceso > 7
+        ) {
+
+            return res.status(400).json({
+                mensaje: "Etapa de proceso no válida."
+            });
+
+        }
+
+        // ==========================================
+        // ACTUALIZAR LOTE
+        // ==========================================
+
+        const resultado = await pool.query(`
+            UPDATE lotes_produccion
+            SET proceso = $1
+            WHERE id = $2
+            RETURNING
+                id,
+                codigo_lote,
+                producto,
+                nombre,
+                cantidad_medallones,
+                proceso,
+                estado
+        `, [
+            proceso,
+            id
+        ]);
+
+        // ==========================================
+        // LOTE NO ENCONTRADO
+        // ==========================================
+
+        if (resultado.rows.length === 0) {
+
+            return res.status(404).json({
+                mensaje: "Lote de producción no encontrado."
+            });
+
+        }
+
+        // ==========================================
+        // RESPUESTA
+        // ==========================================
+
+        res.json({
+
+            mensaje:
+                "Proceso del lote actualizado correctamente.",
+
+            lote:
+                resultado.rows[0]
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Error actualizando proceso del lote:",
+            error
+        );
+
+        res.status(500).json({
+
+            mensaje:
+                "No se pudo actualizar el proceso del lote."
+
+        });
+
+    }
+
+});
+// ==========================================
+// REPORTAR PRODUCCIÓN TERMINADA A MES
+// ==========================================
+
+app.put("/api/lotes-produccion/:id/reportar-mes", async (req, res) => {
+
+    if (!req.session.usuario) {
+        return res.status(401).json({
+            mensaje: "No autorizado."
+        });
+    }
+
+    const id = Number(req.params.id);
+
+    if (!Number.isInteger(id) || id <= 0) {
+        return res.status(400).json({
+            mensaje: "ID de lote no válido."
+        });
+    }
+
+    const client = await pool.connect();
+
+    try {
+
+        await client.query("BEGIN");
+
+        // ==========================================
+        // BUSCAR Y BLOQUEAR EL LOTE
+        // ==========================================
+
+        const loteResult = await client.query(`
+    SELECT
+        id,
+        codigo_lote,
+        id_orden_produccion,
+        producto,
+        nombre,
+        cantidad_medallones,
+        pack,
+        cantidad_packs,
+        estado,
+        proceso,
+        stock_actualizado
+    FROM lotes_produccion
+    WHERE id = $1
+    FOR UPDATE
+`, [id]);
+
+        if (loteResult.rows.length === 0) {
+
+            await client.query("ROLLBACK");
+
+            return res.status(404).json({
+                mensaje: "Lote de producción no encontrado."
+            });
+        }
+
+        const lote = loteResult.rows[0];
+
+        const pack = Number(lote.pack);
+const cantidadPacks = Number(lote.cantidad_packs);
+
+if (
+    !Number.isInteger(pack) ||
+    ![2, 4, 6, 8].includes(pack)
+) {
+    await client.query("ROLLBACK");
+
+    return res.status(400).json({
+        mensaje: "La presentación del lote no es válida."
+    });
+}
+
+if (
+    !Number.isInteger(cantidadPacks) ||
+    cantidadPacks <= 0
+) {
+    await client.query("ROLLBACK");
+
+    return res.status(400).json({
+        mensaje: "La cantidad de packs del lote no es válida."
+    });
+}
+
+
+        // ==========================================
+        // VERIFICAR QUE LA PRODUCCIÓN TERMINÓ
+        // ==========================================
+
+        if (Number(lote.proceso) !== 7) {
+
+            await client.query("ROLLBACK");
+
+            return res.status(400).json({
+                mensaje:
+                    "La producción todavía no ha terminado."
+            });
+        }
+
+        // ==========================================
+        // EVITAR REPORTAR DOS VECES
+        // ==========================================
+
+        if (lote.estado === "Producción reportada") {
+
+            await client.query("ROLLBACK");
+
+            return res.status(400).json({
+                mensaje:
+                    "Esta producción ya fue reportada a MES."
+            });
+        }
+
+        // ==========================================
+        // ACTUALIZAR ESTADO DEL LOTE
+        // ==========================================
+
+        const loteActualizado = await client.query(`
+            UPDATE lotes_produccion
+            SET estado = 'Producción reportada'
+            WHERE id = $1
+            RETURNING
+                id,
+                codigo_lote,
+                id_orden_produccion,
+                producto,
+                nombre,
+                cantidad_medallones,
+                pack,
+                cantidad_packs,
+                fecha_inicio,
+                estado,
+                proceso,
+                stock_actualizado
+        `, [id]);
+
+        // ==========================================
+        // ACTUALIZAR ORDEN DE PRODUCCIÓN
+        // ==========================================
+
+        await client.query(`
+            UPDATE ordenes_produccion
+            SET estado = 'Producción terminada'
+            WHERE id = $1
+        `, [lote.id_orden_produccion]);
+
+        await client.query("COMMIT");
+
+        res.json({
+            mensaje:
+                "Producción reportada a MES correctamente.",
+            lote:
+                loteActualizado.rows[0]
+        });
+
+    } catch (error) {
+
+        await client.query("ROLLBACK");
+
+        console.error(
+            "Error reportando producción a MES:",
+            error
+        );
+
+        res.status(500).json({
+            mensaje:
+                "No se pudo reportar la producción a MES."
+        });
+
+    } finally {
+
+        client.release();
+
+    }
+
+});
+// ==========================================
+// LOTES DE PRODUCCIÓN REPORTADOS A MES
+// ==========================================
+
+app.get("/api/lotes-produccion/reportados-mes", async (req, res) => {
+
+    if (!req.session.usuario) {
+        return res.status(401).json({
+            mensaje: "No autorizado."
+        });
+    }
+
+    try {
+
+        const resultado = await pool.query(`
+    SELECT
+        lp.id,
+        lp.codigo_lote,
+        lp.producto,
+        lp.nombre,
+
+        COALESCE(lp.pack, op.pack) AS pack,
+
+        COALESCE(
+            lp.cantidad_packs,
+            op.cantidad_packs
+        ) AS cantidad_packs,
+
+        lp.cantidad_medallones,
+        lp.fecha_inicio,
+        lp.estado,
+        lp.proceso,
+        lp.stock_actualizado
+
+    FROM lotes_produccion lp
+
+    LEFT JOIN ordenes_produccion op
+        ON op.id = lp.id_orden_produccion
+
+    WHERE lp.estado IN (
+        'Producción reportada',
+        'Stock actualizado'
+    )
+
+    ORDER BY lp.id DESC
+`);
+
+        res.json(resultado.rows);
+
+    } catch (error) {
+
+        console.error(
+            "Error cargando lotes reportados a MES:",
+            error
+        );
+
+        res.status(500).json({
+            mensaje:
+                "No se pudieron cargar las producciones terminadas."
+        });
+    }
+});
+// ACTUALIZAR STOCK DESDE MES
+app.put("/api/lotes-produccion/:id/actualizar-stock", async (req, res) => {
+
+    if (!req.session.usuario) {
+        return res.status(401).json({
+            mensaje: "No autorizado."
+        });
+    }
+
+    const id = Number(req.params.id);
+
+    if (!Number.isInteger(id) || id <= 0) {
+        return res.status(400).json({
+            mensaje: "ID de lote no válido."
+        });
+    }
+
+    const client = await pool.connect();
+
+    try {
+        await client.query("BEGIN");
+
+        // Buscar el lote y bloquearlo para evitar actualizaciones duplicadas
+        const loteResult = await client.query(`
+    SELECT
+        id,
+        codigo_lote,
+        id_orden_produccion,
+        producto,
+        nombre,
+        pack,
+        cantidad_packs,
+        estado,
+        stock_actualizado
+    FROM lotes_produccion
+    WHERE id = $1
+    FOR UPDATE
+`, [id]);
+        if (loteResult.rows.length === 0) {
+            await client.query("ROLLBACK");
+
+            return res.status(404).json({
+                error: "Lote de producción no encontrado."
+            });
+        }
+
+        const lote = loteResult.rows[0];
+
+        // El lote debe haber terminado producción y haber sido reportado a MES
+        if (lote.estado !== "Producción reportada") {
+            await client.query("ROLLBACK");
+
+            return res.status(400).json({
+                error: "Este lote todavía no está reportado a MES."
+            });
+        }
+
+        // Evitar que el mismo lote incremente el stock dos veces
+        if (lote.stock_actualizado === true) {
+            await client.query("ROLLBACK");
+
+            return res.status(400).json({
+                error: "El stock de este lote ya fue actualizado."
+            });
+        }
+
+        const pack = Number(lote.pack);
+        const cantidadPacks = Number(lote.cantidad_packs);
+
+        if (!Number.isInteger(pack) || pack <= 0) {
+            await client.query("ROLLBACK");
+
+            return res.status(400).json({
+                error: "El lote no tiene un pack válido."
+            });
+        }
+
+        if (!Number.isInteger(cantidadPacks) || cantidadPacks <= 0) {
+            await client.query("ROLLBACK");
+
+            return res.status(400).json({
+                error: "El lote no tiene una cantidad de packs válida."
+            });
+        }
+
+        // Buscar el producto correspondiente en el stock
+        const stockResult = await client.query(`
+            SELECT
+                id,
+                producto,
+                nombre,
+                pack,
+                cantidad_packs
+            FROM stock_productos
+            WHERE producto = $1
+              AND pack = $2
+            FOR UPDATE
+        `, [lote.producto, pack]);
+
+        if (stockResult.rows.length === 0) {
+            await client.query("ROLLBACK");
+
+            return res.status(404).json({
+                error: `No existe stock configurado para ${lote.producto} Pack x${pack}.`
+            });
+        }
+
+        const stock = stockResult.rows[0];
+
+        // Sumar los packs producidos al stock existente
+        const stockActualizado = await client.query(`
+            UPDATE stock_productos
+            SET cantidad_packs = cantidad_packs + $1
+            WHERE id = $2
+            RETURNING
+                producto,
+                nombre,
+                pack,
+                cantidad_packs
+        `, [cantidadPacks, stock.id]);
+
+        // Marcar el lote como actualizado
+        const loteActualizado = await client.query(`
+            UPDATE lotes_produccion
+            SET
+                stock_actualizado = TRUE,
+                estado = 'Stock actualizado'
+            WHERE id = $1
+            RETURNING
+                id,
+                codigo_lote,
+                producto,
+                nombre,
+                pack,
+                cantidad_packs,
+                estado,
+                stock_actualizado
+        `, [id]);
+        // ==========================================
+// ELIMINAR ORDEN DE PRODUCCIÓN COMPLETADA
+// ==========================================
+
+await client.query(`
+    DELETE FROM ordenes_produccion
+    WHERE id = $1
+`, [
+    lote.id_orden_produccion
+]);
+
+        await client.query("COMMIT");
+
+        const stockFinal = stockActualizado.rows[0];
+        const loteFinal = loteActualizado.rows[0];
+
+        res.json({
+            mensaje: "Stock actualizado correctamente.",
+
+            stock: {
+                producto: stockFinal.producto,
+                nombre: stockFinal.nombre,
+                pack: Number(stockFinal.pack),
+                cantidadPacks: Number(stockFinal.cantidad_packs)
+            },
+
+            lote: {
+                id: loteFinal.id,
+                codigoLote: loteFinal.codigo_lote,
+                producto: loteFinal.producto,
+                nombre: loteFinal.nombre,
+                pack: Number(loteFinal.pack),
+                cantidadPacks: Number(loteFinal.cantidad_packs),
+                estado: loteFinal.estado,
+                stockActualizado: loteFinal.stock_actualizado
+            }
+        });
+
+    } catch (error) {
+        await client.query("ROLLBACK");
+
+        console.error("Error actualizando stock desde MES:", error);
+
+        res.status(500).json({
+            error: "Error al actualizar el stock."
+        });
+
+    } finally {
+        client.release();
+    }
+});
+// ==========================================
+// CREAR SOLICITUD DE COMPRA
+// ==========================================
+
+app.post("/api/solicitudes-compra", async (req, res) => {
+
+    if (!req.session.usuario) {
+
+        return res.status(401).json({
+            mensaje: "Debes iniciar sesión."
+        });
+
+    }
+
+    const {
+        idOrdenProduccion
+    } = req.body;
+
+    const idOrden = Number(idOrdenProduccion);
+
+    if (!Number.isInteger(idOrden) || idOrden <= 0) {
+
+        return res.status(400).json({
+            mensaje: "ID de orden de producción no válido."
+        });
+
+    }
+
+    try {
+
+        // Buscar la orden de producción
+        const resultadoOrden = await pool.query(`
+            SELECT
+                id,
+                producto,
+                nombre,
+                cantidad_medallones,
+                estado
+            FROM ordenes_produccion
+            WHERE id = $1
+        `, [idOrden]);
+
+        if (resultadoOrden.rows.length === 0) {
+
+            return res.status(404).json({
+                mensaje: "No se encontró la orden de producción."
+            });
+
+        }
+
+        const orden = resultadoOrden.rows[0];
+
+        // Obtener las materias primas necesarias
+        const formulacion =
+            formulaciones[orden.producto];
+
+        if (!formulacion) {
+
+            return res.status(400).json({
+                mensaje:
+                    "No existe una formulación para este producto."
+            });
+
+        }
+
+        const gramosTotales =
+            Number(orden.cantidad_medallones) * 100;
+
+        // Crear una solicitud por cada materia prima insuficiente
+        for (const [materia, porcentaje] of Object.entries(formulacion)) {
+
+            const necesaria =
+                gramosTotales *
+                Number(porcentaje) /
+                100;
+
+            const resultadoInventario =
+                await pool.query(`
+                    SELECT
+                        id,
+                        cantidad_gramos
+                    FROM inventario
+                    WHERE nombre = $1
+                `, [materia]);
+
+            const disponible =
+                resultadoInventario.rows.length > 0
+                    ? Number(
+                        resultadoInventario.rows[0].cantidad_gramos
+                    )
+                    : 0;
+
+            const faltante =
+                necesaria - disponible;
+
+            if (faltante > 0) {
+
+    // Verificar si ya existe una solicitud pendiente
+    // para esta orden y esta materia prima
+    const solicitudExistente = await pool.query(`
+        SELECT id
+        FROM solicitudes_compra
+        WHERE id_orden_produccion = $1
+          AND materia_prima = $2
+          AND estado = 'Pendiente'
+        LIMIT 1
+    `, [
+        idOrden,
+        materia
+    ]);
+
+    // Solo crear la solicitud si no existe
+    if (solicitudExistente.rows.length === 0) {
+
+        await pool.query(`
+            INSERT INTO solicitudes_compra
+            (
+                id_orden_produccion,
+                materia_prima,
+                cantidad_faltante_gramos,
+                estado
+            )
+            VALUES ($1, $2, $3, 'Pendiente')
+        `, [
+            idOrden,
+            materia,
+            faltante
+        ]);
+
+    }
+
+}
+
+        }
+
+        res.status(201).json({
+            mensaje:
+                "Solicitud de compra registrada correctamente."
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Error creando solicitud de compra:",
+            error
+        );
+
+        res.status(500).json({
+            mensaje:
+                "No se pudo crear la solicitud de compra."
+        });
+
+    }
+
+});
+// ==========================================
+// CONSULTAR SOLICITUDES DE COMPRA
+// ==========================================
+
+app.get("/api/solicitudes-compra", async (req, res) => {
+
+    if (!req.session.usuario) {
+
+        return res.status(401).json({
+            mensaje: "Debes iniciar sesión."
+        });
+
+    }
+
+    try {
+
+        const resultado = await pool.query(`
+            SELECT
+                id,
+                id_orden_produccion,
+                materia_prima,
+                cantidad_faltante_gramos,
+                estado,
+                fecha
+            FROM solicitudes_compra
+            ORDER BY id DESC
+        `);
+
+        res.json(
+            resultado.rows.map(solicitud => ({
+                id: solicitud.id,
+                idOrdenProduccion: solicitud.id_orden_produccion,
+                materiaPrima: solicitud.materia_prima,
+                cantidadFaltante: Number(
+                    solicitud.cantidad_faltante_gramos
+                ),
+                estado: solicitud.estado,
+                fecha: new Date(
+                    solicitud.fecha
+                ).toLocaleString("es-CO")
+            }))
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Error consultando solicitudes de compra:",
+            error
+        );
+
+        res.status(500).json({
+            mensaje:
+                "No se pudieron consultar las solicitudes de compra."
+        });
+
+    }
+
+});
+// ==========================================
+// REGISTRAR RECEPCIÓN DE COMPRA
+// ==========================================
+
+app.put("/api/solicitudes-compra/:id/recibir", async (req, res) => {
+
+    if (!req.session.usuario) {
+
+        return res.status(401).json({
+            mensaje: "Debes iniciar sesión."
+        });
+
+    }
+
+    const idSolicitud =
+        Number(req.params.id);
+
+    const cantidadRecibida =
+        Number(req.body.cantidad);
+
+    if (
+        !Number.isInteger(idSolicitud) ||
+        idSolicitud <= 0
+    ) {
+
+        return res.status(400).json({
+            mensaje: "ID de solicitud no válido."
+        });
+
+    }
+
+    if (
+        !Number.isFinite(cantidadRecibida) ||
+        cantidadRecibida <= 0
+    ) {
+
+        return res.status(400).json({
+            mensaje:
+                "La cantidad recibida debe ser mayor que cero."
+        });
+
+    }
+
+    const cliente = await pool.connect();
+
+    try {
+
+        await cliente.query("BEGIN");
+
+        // Buscar y bloquear la solicitud
+        const resultadoSolicitud =
+            await cliente.query(`
+                SELECT
+                    id,
+                    materia_prima,
+                    cantidad_faltante_gramos,
+                    estado
+                FROM solicitudes_compra
+                WHERE id = $1
+                FOR UPDATE
+            `, [idSolicitud]);
+
+        if (resultadoSolicitud.rows.length === 0) {
+
+            await cliente.query("ROLLBACK");
+
+            return res.status(404).json({
+                mensaje:
+                    "No se encontró la solicitud de compra."
+            });
+
+        }
+
+        const solicitud =
+            resultadoSolicitud.rows[0];
+
+        if (solicitud.estado !== "Pendiente") {
+
+            await cliente.query("ROLLBACK");
+
+            return res.status(400).json({
+                mensaje:
+                    "Esta solicitud ya fue recibida."
+            });
+
+        }
+
+        // Buscar la materia prima en inventario
+        const resultadoInventario =
+            await cliente.query(`
+                SELECT
+                    id,
+                    nombre,
+                    cantidad_gramos
+                FROM inventario
+                WHERE nombre = $1
+                FOR UPDATE
+            `, [solicitud.materia_prima]);
+
+        if (resultadoInventario.rows.length === 0) {
+
+            await cliente.query("ROLLBACK");
+
+            return res.status(404).json({
+                mensaje:
+                    "La materia prima no existe en el inventario."
+            });
+
+        }
+
+        // Actualizar inventario
+        const resultadoActualizacion =
+            await cliente.query(`
+                UPDATE inventario
+                SET cantidad_gramos =
+                    cantidad_gramos + $1
+                WHERE id = $2
+                RETURNING
+                    id,
+                    nombre,
+                    cantidad_gramos
+            `, [
+                cantidadRecibida,
+                resultadoInventario.rows[0].id
+            ]);
+
+        // Marcar solicitud como recibida
+        await cliente.query(`
+            UPDATE solicitudes_compra
+            SET estado = 'Recibida'
+            WHERE id = $1
+        `, [idSolicitud]);
+
+        await cliente.query("COMMIT");
+
+        res.json({
+            mensaje:
+                "Recepción registrada correctamente.",
+            solicitud: {
+                id: idSolicitud,
+                materiaPrima:
+                    solicitud.materia_prima,
+                cantidadRecibida:
+                    cantidadRecibida,
+                estado: "Recibida"
+            },
+            inventario: {
+                nombre:
+                    resultadoActualizacion.rows[0].nombre,
+                cantidad:
+                    Number(
+                        resultadoActualizacion.rows[0]
+                            .cantidad_gramos
+                    )
+            }
+        });
+
+    } catch (error) {
+
+        await cliente.query("ROLLBACK");
+
+        console.error(
+            "Error registrando recepción de compra:",
+            error
+        );
+
+        res.status(500).json({
+            mensaje:
+                "No se pudo registrar la recepción."
+        });
+
+    } finally {
+
+        cliente.release();
+
+    }
+
+});
+// ==========================================
+// INICIAR PRODUCCIÓN DESDE MES
+// ==========================================
+
+app.put("/api/ordenes-produccion/:id/iniciar", async (req, res) => {
+
+    if (!req.session.usuario) {
+        return res.status(401).json({
+            mensaje: "Debes iniciar sesión."
+        });
+    }
+
+    const id = Number(req.params.id);
+
+    if (!Number.isInteger(id) || id <= 0) {
+        return res.status(400).json({
+            mensaje: "La orden no es válida."
+        });
+    }
+
+    const client = await pool.connect();
+
+    try {
+
+        await client.query("BEGIN");
+
+
+        // ==========================================
+        // OBTENER Y BLOQUEAR LA ORDEN
+        // ==========================================
+
+        const resultadoOrden = await client.query(`
+            SELECT
+    id,
+    producto,
+    nombre,
+    cantidad_medallones,
+    pack,
+    cantidad_packs,
+    estado
+FROM ordenes_produccion
+WHERE id = $1
+FOR UPDATE
+        `, [id]);
+
+
+        if (resultadoOrden.rows.length === 0) {
+
+            await client.query("ROLLBACK");
+
+            return res.status(404).json({
+                mensaje: "Orden de producción no encontrada."
+            });
+
+        }
+
+
+        const orden = resultadoOrden.rows[0];
+
+
+        // ==========================================
+        // VERIFICAR ESTADO
+        // ==========================================
+
+        if (orden.estado !== "Pendiente") {
+
+            await client.query("ROLLBACK");
+
+            return res.status(400).json({
+                mensaje:
+                    `La orden ya está en estado "${orden.estado}".`
+            });
+
+        }
+
+
+        // ==========================================
+        // CALCULAR MATERIAS PRIMAS
+        // ==========================================
+
+        const gramosTotales =
+            Number(orden.cantidad_medallones) * 100;
+
+        const formulacion =
+            formulaciones[orden.producto];
+
+
+        if (!formulacion) {
+
+            await client.query("ROLLBACK");
+
+            return res.status(400).json({
+                mensaje:
+                    "No existe una formulación para este producto."
+            });
+
+        }
+
+
+        const consumo = {};
+
+
+        Object.entries(formulacion).forEach(
+            ([materia, porcentaje]) => {
+
+                consumo[materia] =
+                    gramosTotales *
+                    Number(porcentaje) /
+                    100;
+
+            }
+        );
+
+
+        // ==========================================
+        // COMPROBAR INVENTARIO
+        // ==========================================
+
+        for (const materia in consumo) {
+
+            const resultadoInventario =
+                await client.query(`
+                    SELECT
+                        cantidad_gramos
+                    FROM inventario
+                    WHERE nombre = $1
+                    FOR UPDATE
+                `, [materia]);
+
+
+            if (resultadoInventario.rows.length === 0) {
+
+                throw new Error(
+                    `No existe la materia prima: ${materia}.`
+                );
+
+            }
+
+
+            const disponible =
+                Number(
+                    resultadoInventario
+                        .rows[0]
+                        .cantidad_gramos
+                );
+
+
+            if (disponible < consumo[materia]) {
+
+                throw new Error(
+                    `Inventario insuficiente de ${materia}.`
+                );
+
+            }
+
+        }
+
+
+        // ==========================================
+        // DESCONTAR INVENTARIO
+        // ==========================================
+
+        for (const materia in consumo) {
+
+            await client.query(`
+                UPDATE inventario
+                SET cantidad_gramos =
+                    cantidad_gramos - $1
+                WHERE nombre = $2
+            `, [
+                consumo[materia],
+                materia
+            ]);
+
+        }
+
+
+        // ==========================================
+        // CAMBIAR ESTADO DE LA ORDEN
+        // ==========================================
+
+        const resultado =
+            await client.query(`
+                UPDATE ordenes_produccion
+                SET estado = 'En producción'
+                WHERE id = $1
+                RETURNING
+                    id,
+                    producto,
+                    nombre,
+                    cantidad_medallones,
+                    estado,
+                    fecha
+            `, [id]);
+
+
+        // ==========================================
+// REGISTRAR LOTE DE PRODUCCIÓN
+// ==========================================
+
+const fechaLote = new Date();
+
+const codigoLote =
+    `LT-OP${orden.id}-` +
+    `${fechaLote.getFullYear()}` +
+    `${String(fechaLote.getMonth() + 1).padStart(2, "0")}` +
+    `${String(fechaLote.getDate()).padStart(2, "0")}-` +
+    `${String(fechaLote.getHours()).padStart(2, "0")}` +
+    `${String(fechaLote.getMinutes()).padStart(2, "0")}` +
+    `${String(fechaLote.getSeconds()).padStart(2, "0")}`;
+
+const resultadoLote =
+    await client.query(`
+        INSERT INTO lotes_produccion
+        (
+            codigo_lote,
+            id_orden_produccion,
+            producto,
+            nombre,
+            cantidad_medallones,
+            pack,
+            cantidad_packs,
+            estado
+        )
+        VALUES
+        ($1, $2, $3, $4, $5, $6, $7, 'En producción')
+        RETURNING
+            id,
+            codigo_lote,
+            id_orden_produccion,
+            producto,
+            nombre,
+            cantidad_medallones,
+            pack,
+            cantidad_packs,
+            fecha_inicio,
+            estado
+    `, [
+        codigoLote,
+        orden.id,
+        orden.producto,
+        orden.nombre,
+        orden.cantidad_medallones,
+        orden.pack,
+        orden.cantidad_packs
+    ]);
+
+await client.query("COMMIT");
+
+res.json({
+    mensaje:
+        "Producción iniciada correctamente.",
+    orden: resultado.rows[0],
+    lote: resultadoLote.rows[0]
+});
+
+
+    } catch (error) {
+
+        await client.query("ROLLBACK");
+
+        console.error(
+            "Error iniciando producción:",
+            error
+        );
+
+        res.status(400).json({
+            mensaje:
+                error.message ||
+                "No se pudo iniciar la producción."
+        });
+
+    } finally {
+
+        client.release();
+
+    }
+
+});
 // ==========================================
 // OBTENER PEDIDOS
 // ==========================================
@@ -471,65 +2291,6 @@ app.post("/api/pedidos", async (req, res) => {
 
         await client.query("BEGIN");
 
-
-        // ------------------------------------------
-        // COMPROBAR INVENTARIO
-        // ------------------------------------------
-
-        for (
-            const materia in consumo
-        ) {
-
-            const resultado =
-                await client.query(`
-                    SELECT
-                        id,
-                        nombre,
-                        cantidad_gramos
-                    FROM inventario
-                    WHERE nombre = $1
-                    FOR UPDATE
-                `, [
-                    materia
-                ]);
-
-
-            if (resultado.rows.length === 0) {
-
-                throw new Error(
-                    `Materia prima no encontrada: ${materia}`
-                );
-
-            }
-
-
-            const disponible =
-                Number(
-                    resultado.rows[0].cantidad_gramos
-                );
-
-
-            const necesario =
-                consumo[materia];
-
-
-            if (disponible < necesario) {
-
-                await client.query("ROLLBACK");
-
-
-                return res.status(400).json({
-
-                    mensaje:
-                        `Inventario insuficiente de ${materia}. ` +
-                        `Disponible: ${disponible} g. ` +
-                        `Necesario: ${necesario} g.`
-
-                });
-
-            }
-
-        }
 
         // ------------------------------------------
 // GUARDAR PEDIDO
@@ -1181,7 +2942,7 @@ app.put("/api/pedidos/:id/proceso", async (req, res) => {
         if (
             !Number.isInteger(proceso) ||
             proceso < 0 ||
-            proceso > 6
+            proceso > 7
         ) {
 
             return res.status(400).json({
@@ -2049,6 +3810,327 @@ await pool.query(`
 `);
     console.log("Tabla de pedidos lista.");
 }
+// ==========================================
+// TABLA DE ÓRDENES DE PRODUCCIÓN
+// ==========================================
+
+async function crearTablaOrdenesProduccion() {
+
+    try {
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS ordenes_produccion (
+                id SERIAL PRIMARY KEY,
+                producto VARCHAR(20) NOT NULL,
+                nombre VARCHAR(100) NOT NULL,
+                cantidad_medallones INTEGER NOT NULL,
+                estado VARCHAR(50) NOT NULL DEFAULT 'Pendiente',
+                fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        await pool.query(`
+    ALTER TABLE ordenes_produccion
+    ADD COLUMN IF NOT EXISTS pack INTEGER
+`);
+
+await pool.query(`
+    ALTER TABLE ordenes_produccion
+    ADD COLUMN IF NOT EXISTS cantidad_packs INTEGER
+`);
+
+        console.log(
+            "Tabla de órdenes de producción lista."
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Error creando tabla de órdenes de producción:",
+            error
+        );
+
+    }
+}
+// ==========================================
+// TABLA DE SOLICITUDES DE COMPRA
+// ==========================================
+
+async function crearTablaSolicitudesCompra() {
+
+    try {
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS solicitudes_compra (
+                id SERIAL PRIMARY KEY,
+                id_orden_produccion INTEGER,
+                materia_prima VARCHAR(100) NOT NULL,
+                cantidad_faltante_gramos NUMERIC NOT NULL,
+                estado VARCHAR(50) NOT NULL DEFAULT 'Pendiente',
+                fecha TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        console.log("Tabla de solicitudes de compra lista.");
+
+    } catch (error) {
+
+        console.error(
+            "Error creando tabla solicitudes_compra:",
+            error
+        );
+
+    }
+
+}
+// ==========================================
+// CREAR STOCK INICIAL DE PRODUCTOS TERMINADOS
+// ==========================================
+
+async function crearTablaStockProductos() {
+
+    try {
+
+        // ==========================================
+        // CREAR TABLA
+        // ==========================================
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS stock_productos (
+
+                id SERIAL PRIMARY KEY,
+
+                producto VARCHAR(20) NOT NULL,
+
+                nombre VARCHAR(100) NOT NULL,
+
+                pack INTEGER NOT NULL,
+
+                peso_gramos INTEGER NOT NULL,
+
+                cantidad_packs INTEGER NOT NULL DEFAULT 0,
+
+                UNIQUE (producto, pack)
+
+            )
+        `);
+
+
+        // ==========================================
+        // ASEGURAR COLUMNAS
+        // ==========================================
+
+        await pool.query(`
+            ALTER TABLE stock_productos
+            ADD COLUMN IF NOT EXISTS pack INTEGER
+        `);
+
+        await pool.query(`
+            ALTER TABLE stock_productos
+            ADD COLUMN IF NOT EXISTS peso_gramos INTEGER
+        `);
+
+        await pool.query(`
+            ALTER TABLE stock_productos
+            ADD COLUMN IF NOT EXISTS cantidad_packs INTEGER
+        `);
+
+
+        // ==========================================
+        // ELIMINAR RESTRICCIÓN ANTIGUA
+        // ==========================================
+
+        await pool.query(`
+            ALTER TABLE stock_productos
+            DROP CONSTRAINT IF EXISTS stock_productos_producto_key
+        `);
+
+
+        // ==========================================
+        // CREAR ÍNDICE ÚNICO
+        // producto + presentación
+        // ==========================================
+
+        await pool.query(`
+            CREATE UNIQUE INDEX IF NOT EXISTS
+            idx_stock_productos_producto_pack
+            ON stock_productos (producto, pack)
+        `);
+
+
+        // ==========================================
+        // CONVERTIR STOCK ANTIGUO
+        // res_x2  -> res
+        // res_x4  -> res
+        // etc.
+        // ==========================================
+
+        await pool.query(`
+            UPDATE stock_productos
+            SET producto = 'res'
+            WHERE producto IN (
+                'res_x2',
+                'res_x4',
+                'res_x6',
+                'res_x8'
+            )
+        `);
+
+
+        await pool.query(`
+            UPDATE stock_productos
+            SET producto = 'cerdo'
+            WHERE producto IN (
+                'cerdo_x2',
+                'cerdo_x4',
+                'cerdo_x6',
+                'cerdo_x8'
+            )
+        `);
+
+
+        await pool.query(`
+            UPDATE stock_productos
+            SET producto = 'mixto'
+            WHERE producto IN (
+                'mixto_x2',
+                'mixto_x4',
+                'mixto_x6',
+                'mixto_x8'
+            )
+        `);
+
+
+        // ==========================================
+        // CREAR PRESENTACIONES QUE NO EXISTAN
+        // ==========================================
+
+        await pool.query(`
+            INSERT INTO stock_productos
+                (
+                    producto,
+                    nombre,
+                    pack,
+                    peso_gramos,
+                    cantidad_packs
+                )
+            VALUES
+
+                ('res', 'Carne de res', 2, 200, 10),
+                ('res', 'Carne de res', 4, 400, 10),
+                ('res', 'Carne de res', 6, 600, 10),
+                ('res', 'Carne de res', 8, 800, 10),
+
+                ('cerdo', 'Carne de cerdo', 2, 200, 10),
+                ('cerdo', 'Carne de cerdo', 4, 400, 10),
+                ('cerdo', 'Carne de cerdo', 6, 600, 10),
+                ('cerdo', 'Carne de cerdo', 8, 800, 10),
+
+                ('mixto', 'Medallón mixto', 2, 200, 10),
+                ('mixto', 'Medallón mixto', 4, 400, 10),
+                ('mixto', 'Medallón mixto', 6, 600, 10),
+                ('mixto', 'Medallón mixto', 8, 800, 10)
+
+            ON CONFLICT (producto, pack)
+            DO NOTHING
+        `);
+
+
+        console.log(
+            "Stock de productos terminados por presentación listo."
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Error creando stock de productos terminados:",
+            error
+        );
+
+        throw error;
+
+    }
+
+}
+// ==========================================
+// TABLA DE LOTES DE PRODUCCIÓN
+// ==========================================
+
+async function crearTablaLotesProduccion() {
+
+    try {
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS lotes_produccion (
+                id SERIAL PRIMARY KEY,
+                codigo_lote VARCHAR(50) NOT NULL UNIQUE,
+                id_orden_produccion INTEGER NOT NULL,
+                producto VARCHAR(20) NOT NULL,
+                nombre VARCHAR(100) NOT NULL,
+                cantidad_medallones INTEGER NOT NULL,
+                fecha_inicio TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                estado VARCHAR(50) NOT NULL DEFAULT 'En producción',
+                proceso INTEGER NOT NULL DEFAULT 0
+            )
+        `);
+
+        // AGREGAR LA COLUMNA A TABLAS EXISTENTES
+
+        await pool.query(`
+            ALTER TABLE lotes_produccion
+            ADD COLUMN IF NOT EXISTS proceso INTEGER NOT NULL DEFAULT 0
+        `);
+
+        await pool.query(`
+    ALTER TABLE lotes_produccion
+    ADD COLUMN IF NOT EXISTS pack INTEGER
+`);
+await pool.query(`
+    ALTER TABLE lotes_produccion
+    ADD COLUMN IF NOT EXISTS stock_actualizado BOOLEAN
+    NOT NULL DEFAULT FALSE
+`);
+await pool.query(`
+    ALTER TABLE lotes_produccion
+    ADD COLUMN IF NOT EXISTS cantidad_packs INTEGER
+`);
+// ==========================================
+// CORREGIR LOTE DE PRUEBA OP7
+// ==========================================
+
+await pool.query(`
+    UPDATE ordenes_produccion
+    SET
+        pack = 2,
+        cantidad_packs = 10
+    WHERE id = 7
+      AND pack IS NULL
+`);
+
+await pool.query(`
+    UPDATE lotes_produccion
+    SET
+        pack = 2,
+        cantidad_packs = 10
+    WHERE id_orden_produccion = 7
+      AND pack IS NULL
+`);
+
+        console.log(
+            "Tabla de lotes de producción lista."
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Error creando tabla de lotes de producción:",
+            error
+        );
+
+    }
+
+}
+
 // ------------------------------------------
 // CONSULTAR PEDIDO POR NÚMERO DE GUÍA
 // ------------------------------------------
@@ -2112,7 +4194,15 @@ async function iniciarServidor() {
 
         await crearTablaPedidos();
 
+        await crearTablaOrdenesProduccion();
+
         await crearTablaInventario();
+
+        await crearTablaLotesProduccion();
+
+        await crearTablaSolicitudesCompra();
+
+        await crearTablaStockProductos();
 
         await cargarInventarioInicial();
 
@@ -2136,5 +4226,69 @@ async function iniciarServidor() {
     }
 
 }
+// ==========================================
+// TRAZABILIDAD DE UN LOTE
+// ==========================================
+
+app.get("/api/lotes-produccion/trazabilidad/:codigo", async (req, res) => {
+
+    if (!req.session.usuario) {
+        return res.status(401).json({
+            mensaje: "No autorizado."
+        });
+    }
+
+    const codigo = req.params.codigo.trim();
+
+    if (!codigo) {
+        return res.status(400).json({
+            mensaje: "Debes ingresar un código de lote."
+        });
+    }
+
+    try {
+
+        const resultado = await pool.query(`
+            SELECT
+                id,
+                codigo_lote,
+                id_orden_produccion,
+                producto,
+                nombre,
+                cantidad_medallones,
+                pack,
+                cantidad_packs,
+                fecha_inicio,
+                estado,
+                proceso,
+                stock_actualizado
+            FROM lotes_produccion
+            WHERE codigo_lote = $1
+        `, [codigo]);
+
+        if (resultado.rows.length === 0) {
+
+            return res.status(404).json({
+                mensaje: "No se encontró un lote con ese código."
+            });
+
+        }
+
+        res.json(resultado.rows[0]);
+
+    } catch (error) {
+
+        console.error(
+            "Error consultando trazabilidad del lote:",
+            error
+        );
+
+        res.status(500).json({
+            mensaje: "No se pudo consultar la trazabilidad."
+        });
+
+    }
+
+});
 
 iniciarServidor();

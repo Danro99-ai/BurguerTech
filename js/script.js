@@ -1749,6 +1749,97 @@ function actualizarProceso() {
                 <strong>Preparando control de calidad...</strong>
             </div>
 
+            <div class="grafica-peso-calidad">
+
+    <div class="titulo-grafica-calidad">
+
+    <div>
+    <div class="indicadores-hmi-calidad">
+
+    <div class="indicador-hmi aceptados">
+
+        <span class="indicador-hmi-titulo">
+            Medallones aceptados
+        </span>
+
+        <strong id="indicador-aceptados">
+            0
+        </strong>
+
+        <small>
+            Dentro de especificación
+        </small>
+
+    </div>
+
+
+    <div class="indicador-hmi rechazados">
+
+        <span class="indicador-hmi-titulo">
+    Medallones reprocesados
+</span>
+
+        <strong id="indicador-rechazados">
+            0
+        </strong>
+
+        <small>
+    Requirieron ajuste de peso
+</small>
+
+    </div>
+
+
+    <div class="indicador-hmi calidad">
+
+        <span class="indicador-hmi-titulo">
+    Aceptación a la primera
+</span>
+
+<strong id="indicador-calidad">
+    0 %
+</strong>
+
+<small>
+    Medallones sin reproceso
+</small>
+
+    </div>
+
+
+    <div class="indicador-hmi promedio">
+
+        <span class="indicador-hmi-titulo">
+            Peso promedio
+        </span>
+
+        <strong id="indicador-peso-promedio">
+            --.- g
+        </strong>
+
+        <small>
+            Promedio del lote
+        </small>
+
+    </div>
+
+</div>
+        <strong>Tendencia del peso</strong>
+        <span>Control de peso de los medallones</span>
+    </div>
+
+    <div class="leyenda-grafica">
+        <span>● Medición</span>
+        <span>— Objetivo 100 g</span>
+    </div>
+
+</div>
+    <div class="grafica-contenedor">
+        <canvas id="grafica-peso-calidad"></canvas>
+    </div>
+
+</div>
+
             <div class="medallon-control-calidad">
 
                 <div class="numero-medallon-calidad">
@@ -1916,6 +2007,61 @@ function actualizarProceso() {
 
             </div>
 
+            <div class="indicadores-hmi-refrigeracion">
+
+    <div class="indicador-frio">
+        <span>Estado del compresor</span>
+
+        <strong id="estado-compresor">
+            ACTIVO
+        </strong>
+
+        <small>
+            Sistema de refrigeración
+        </small>
+    </div>
+
+
+    <div class="indicador-frio">
+        <span>Estado de temperatura</span>
+
+        <strong id="indicador-rango">
+            FUERA DE RANGO
+        </strong>
+
+        <small>
+            Límite: 0 - 5 °C
+        </small>
+    </div>
+
+
+    <div class="indicador-frio">
+        <span>Alarmas</span>
+
+        <strong id="indicador-alarma">
+            0
+        </strong>
+
+        <small>
+            Eventos registrados
+        </small>
+    </div>
+
+
+    <div class="indicador-frio">
+        <span>Reajustes</span>
+
+        <strong id="indicador-reajustes">
+            0
+        </strong>
+
+        <small>
+            Correcciones automáticas
+        </small>
+    </div>
+
+</div>
+
             <div
                 id="estado-general-refrigeracion"
                 class="estado-general-refrigeracion"
@@ -1950,6 +2096,40 @@ function actualizarProceso() {
                 </div>
 
             </div>
+
+            <div class="grafica-refrigeracion">
+
+    <div class="titulo-grafica">
+        <div>
+            <h4>
+                Comportamiento de la temperatura
+            </h4>
+
+            <span>
+                Monitoreo en tiempo real
+            </span>
+        </div>
+
+        <div class="leyenda-grafica">
+
+            <span>
+                <i class="punto-temperatura"></i>
+                Temperatura
+            </span>
+
+            <span>
+                <i class="punto-objetivo"></i>
+                Objetivo 3 °C
+            </span>
+
+        </div>
+    </div>
+
+    <canvas
+        id="grafica-temperatura-refrigeracion"
+    ></canvas>
+
+</div>
 
             <div class="historial-temperatura">
 
@@ -2230,12 +2410,27 @@ else if (Number(procesoActual) === 7) {
 
 
     // ------------------------------------------
-    // FECHA DE PRODUCCIÓN
-    // ------------------------------------------
+// FECHA DE PRODUCCIÓN Y VENCIMIENTO
+// ------------------------------------------
 
-    const fechaProduccion =
-        new Date()
-            .toLocaleDateString("es-CO");
+const fechaProduccionDate = new Date();
+
+const fechaVencimientoDate = new Date(
+    fechaProduccionDate
+);
+
+// Agregar 2 meses
+fechaVencimientoDate.setMonth(
+    fechaVencimientoDate.getMonth() + 2
+);
+
+const fechaProduccion =
+    fechaProduccionDate
+        .toLocaleDateString("es-CO");
+
+const fechaVencimiento =
+    fechaVencimientoDate
+        .toLocaleDateString("es-CO");
 
 
     // ------------------------------------------
@@ -2385,14 +2580,16 @@ else if (Number(procesoActual) === 7) {
                     </div>
 
                     <div class="linea-etiqueta">
-                        <span>
-                            Fecha de vencimiento
-                        </span>
 
-                        <strong>
-                            Por definir
-                        </strong>
-                    </div>
+    <span>
+        Fecha de vencimiento
+    </span>
+
+    <strong>
+        ${fechaVencimiento}
+    </strong>
+
+</div>
 
                     <div class="linea-etiqueta">
                         <span>
@@ -3030,34 +3227,52 @@ function iniciarEtiquetadoAutomatico(
     etiquetarSiguiente();
 
 }
-function iniciarControlRefrigeracionAutomatico() {
 
-    // Evitar reiniciar el proceso si la pantalla se actualiza
-    if (window.controlRefrigeracionActivo) {
-        return;
-    }
-
-    window.controlRefrigeracionActivo = true;
-    window.controlRefrigeracionFinalizado = false;
-
-        const botonSiguiente =
-        document.querySelector(".controles-proceso button");
-
-    if (botonSiguiente) {
-        botonSiguiente.disabled = true;
-        botonSiguiente.textContent = "Controlando temperatura...";
-    }
-
-    window.controlRefrigeracion = {
-        segundos: 0,
-        total: 30,
-        temperatura: 6.5,
-        historial: [],
-        reajustes: 0
-    };
-
-    actualizarControlRefrigeracion();
+function iniciarControlRefrigeracionAutomatico() { 
+ 
+    // Evitar reiniciar el proceso si la pantalla se actualiza 
+    if (window.controlRefrigeracionActivo) { 
+        return; 
+    } 
+ 
+    window.controlRefrigeracionActivo = true; 
+    window.controlRefrigeracionFinalizado = false; 
+ 
+    const botonSiguiente = 
+        document.querySelector(".controles-proceso button"); 
+ 
+    if (botonSiguiente) { 
+        botonSiguiente.disabled = true; 
+        botonSiguiente.textContent = "Controlando temperatura..."; 
+    } 
+ 
+    window.controlRefrigeracion = { 
+        segundos: 0, 
+        total: 30, 
+ 
+        // Temperatura inicial 
+        temperatura: 6.5, 
+ 
+        // Rango permitido 
+        temperaturaMinima: 0, 
+        temperaturaMaxima: 5, 
+ 
+        // Temperatura objetivo 
+        temperaturaObjetivo: 3, 
+ 
+        historial: [], 
+ 
+        reajustes: 0, 
+ 
+        // Estado del sistema 
+        refrigerando: true, 
+        alarma: false, 
+        perturbacionActiva: false 
+    }; 
+ 
+    actualizarControlRefrigeracion(); 
 }
+
 function actualizarControlRefrigeracion() {
 
     const control = window.controlRefrigeracion;
@@ -3097,24 +3312,172 @@ function actualizarControlRefrigeracion() {
         return;
     }
 
-    // Actualizar temperatura automáticamente
-    if (control.segundos > 0) {
+    // ==========================================
+// CONTROL AUTOMÁTICO DE TEMPERATURA
+// ==========================================
 
-        // La temperatura va descendiendo durante la refrigeración
-        const descenso =
-            Math.random() * 0.25 + 0.10;
+if (control.segundos > 0) {
 
+    // Enfriamiento normal
+    const descenso =
+        Math.random() * 0.25 + 0.10;
+
+    control.temperatura =
+        Math.max(
+            0.5,
+            control.temperatura - descenso
+        );
+
+
+    // ==========================================
+    // PERTURBACIÓN DEL SISTEMA
+    // ==========================================
+
+    // En el segundo 15 se presenta una
+    // perturbación que aumenta la temperatura.
+    if (
+        control.segundos === 15 &&
+        !control.perturbacionActiva
+    ) {
+
+        control.perturbacionActiva = true;
+
+        control.temperatura += 3.5;
+    }
+
+
+    // ==========================================
+    // RECUPERACIÓN DESPUÉS DE LA PERTURBACIÓN
+    // ==========================================
+
+    if (
+        control.perturbacionActiva &&
+        control.temperatura > 5
+    ) {
+
+        // El sistema continúa refrigerando
+        // hasta volver al rango permitido.
         control.temperatura =
             Math.max(
                 0.5,
-                control.temperatura - descenso
+                control.temperatura - 0.20
             );
     }
+}
 
     const temperatura =
         Number(
             control.temperatura.toFixed(1)
         );
+    
+    // ==========================================
+// ACTUALIZAR INDICADORES HMI
+// ==========================================
+
+const compresor =
+    document.getElementById(
+        "estado-compresor"
+    );
+
+const indicadorRango =
+    document.getElementById(
+        "indicador-rango"
+    );
+
+const indicadorAlarma =
+    document.getElementById(
+        "indicador-alarma"
+    );
+
+const indicadorReajustes =
+    document.getElementById(
+        "indicador-reajustes"
+    );
+
+
+if (compresor) {
+
+    compresor.textContent =
+        temperatura > 5
+            ? "MÁXIMA POTENCIA"
+            : "REFRIGERANDO";
+}
+
+
+if (indicadorRango) {
+
+    const tarjetaRango =
+        indicadorRango.closest(".indicador-frio");
+
+    if (
+        temperatura >= 0 &&
+        temperatura <= 5
+    ) {
+
+        indicadorRango.textContent =
+            "✓ EN RANGO";
+
+        if (tarjetaRango) {
+            tarjetaRango.classList.add(
+                "temperatura-ok"
+            );
+
+            tarjetaRango.classList.remove(
+                "temperatura-alerta"
+            );
+        }
+
+    } else {
+
+        indicadorRango.textContent =
+            "⚠ FUERA DE RANGO";
+
+        if (tarjetaRango) {
+            tarjetaRango.classList.add(
+                "temperatura-alerta"
+            );
+
+            tarjetaRango.classList.remove(
+                "temperatura-ok"
+            );
+        }
+    }
+}
+
+
+if (indicadorAlarma) {
+
+    const tarjetaAlarma =
+        indicadorAlarma.closest(".indicador-frio");
+
+    if (temperatura > 5) {
+
+        indicadorAlarma.textContent = "⚠ 1";
+
+        if (tarjetaAlarma) {
+            tarjetaAlarma.classList.add(
+                "alarma-activa"
+            );
+        }
+
+    } else {
+
+        indicadorAlarma.textContent = "0";
+
+        if (tarjetaAlarma) {
+            tarjetaAlarma.classList.remove(
+                "alarma-activa"
+            );
+        }
+    }
+}
+
+
+if (indicadorReajustes) {
+
+    indicadorReajustes.textContent =
+        control.reajustes;
+}
 
     // Mostrar temperatura
     temperaturaElemento.textContent =
@@ -3122,6 +3485,19 @@ function actualizarControlRefrigeracion() {
 
     temperaturaDigital.textContent =
         `${temperatura.toFixed(1)} °C`;
+
+        if (temperatura > 5) {
+
+    temperaturaDigital.classList.add(
+        "temperatura-en-alarma"
+    );
+
+} else {
+
+    temperaturaDigital.classList.remove(
+        "temperatura-en-alarma"
+    );
+}
 
     // Mostrar tiempo
     const minutos =
@@ -3142,6 +3518,7 @@ function actualizarControlRefrigeracion() {
         tiempo: control.segundos,
         temperatura: temperatura
     });
+    actualizarGraficaTemperatura();
 
     // Mostrar historial
     if (historial) {
@@ -3179,8 +3556,11 @@ function actualizarControlRefrigeracion() {
             }).join("");
     }
 
-    // Estado actual
-    if (
+    // ==========================================
+// ESTADO ACTUAL DEL SISTEMA
+// ==========================================
+
+if (
     temperatura >= 0 &&
     temperatura <= 5
 ) {
@@ -3189,30 +3569,50 @@ function actualizarControlRefrigeracion() {
         "✓ En rango";
 
     accion.textContent =
-        "Sistema de refrigeración funcionando correctamente.";
+        "Temperatura controlada correctamente.";
 
     estadoGeneral.innerHTML = `
-        <strong>● Enfriando</strong>
+        <strong>✓ TEMPERATURA CONTROLADA</strong>
+
         <span>
-            Temperatura dentro del rango permitido.
+            La temperatura se encuentra dentro del rango
+            permitido de 0 °C a 5 °C.
         </span>
     `;
+
+    estadoGeneral.classList.remove(
+        "estado-alarma"
+    );
+
+    estadoGeneral.classList.add(
+        "estado-ok"
+    );
 
 } else {
 
     estadoTemperatura.textContent =
-        "⚠ Fuera de rango";
+        "⚠ FUERA DE RANGO";
 
     accion.textContent =
-        "Continuando refrigeración...";
+        "Sistema aumentando la refrigeración...";
 
     estadoGeneral.innerHTML = `
-        <strong>● Enfriando</strong>
+        <strong>⚠ ALARMA DE TEMPERATURA</strong>
+
         <span>
-            La temperatura aún no está dentro del rango.
-            El sistema continuará refrigerando.
+            Temperatura superior al límite de 5 °C.
+            El sistema está aumentando la refrigeración
+            para recuperar el rango permitido.
         </span>
     `;
+
+    estadoGeneral.classList.remove(
+        "estado-ok"
+    );
+
+    estadoGeneral.classList.add(
+        "estado-alarma"
+    );
 }
 
     // ¿Ya terminaron los 30 segundos?
@@ -3232,6 +3632,293 @@ function actualizarControlRefrigeracion() {
 
     }, 1000);
 }
+
+function actualizarGraficaTemperatura() {
+
+    const canvas =
+        document.getElementById(
+            "grafica-temperatura-refrigeracion"
+        );
+
+    const control =
+        window.controlRefrigeracion;
+
+    if (!canvas || !control) {
+        return;
+    }
+
+    const ctx =
+        canvas.getContext("2d");
+
+    const rect =
+        canvas.getBoundingClientRect();
+
+    const dpr =
+        window.devicePixelRatio || 1;
+
+    canvas.width =
+        rect.width * dpr;
+
+    canvas.height =
+        rect.height * dpr;
+
+    ctx.setTransform(
+        dpr,
+        0,
+        0,
+        dpr,
+        0,
+        0
+    );
+
+    const w = rect.width;
+    const h = rect.height;
+
+    ctx.clearRect(
+        0,
+        0,
+        w,
+        h
+    );
+
+    const datos =
+        control.historial
+            .slice()
+            .reverse();
+
+    if (datos.length === 0) {
+        return;
+    }
+
+    const margenIzq = 42;
+    const margenDer = 15;
+    const margenSup = 15;
+    const margenInf = 30;
+
+    const graficaW =
+        w -
+        margenIzq -
+        margenDer;
+
+    const graficaH =
+        h -
+        margenSup -
+        margenInf;
+
+    const minTemp = 0;
+    const maxTemp = 8;
+
+    function x(i) {
+
+        if (datos.length === 1) {
+            return margenIzq +
+                graficaW / 2;
+        }
+
+        return margenIzq +
+            (
+                i /
+                (datos.length - 1)
+            ) *
+            graficaW;
+    }
+
+    function y(temp) {
+
+        return margenSup +
+            (
+                (maxTemp - temp) /
+                (maxTemp - minTemp)
+            ) *
+            graficaH;
+    }
+
+
+    // ======================================
+    // ZONA 0 - 5 °C
+    // ======================================
+
+    const y5 = y(5);
+    const y0 = y(0);
+
+    ctx.fillStyle =
+        "rgba(24, 169, 87, 0.08)";
+
+    ctx.fillRect(
+        margenIzq,
+        y5,
+        graficaW,
+        y0 - y5
+    );
+
+
+    // ======================================
+    // CUADRÍCULA
+    // ======================================
+
+    ctx.font =
+        "10px Arial";
+
+    ctx.textAlign =
+        "right";
+
+    ctx.textBaseline =
+        "middle";
+
+    for (
+        let temp = 0;
+        temp <= 8;
+        temp++
+    ) {
+
+        const yy = y(temp);
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            margenIzq,
+            yy
+        );
+
+        ctx.lineTo(
+            w - margenDer,
+            yy
+        );
+
+        ctx.strokeStyle =
+            temp === 5
+                ? "#777"
+                : "#e5e5e5";
+
+        ctx.lineWidth =
+            temp === 5
+                ? 1.5
+                : 1;
+
+        ctx.stroke();
+
+        ctx.fillStyle =
+            "#666";
+
+        ctx.fillText(
+            `${temp}°`,
+            margenIzq - 7,
+            yy
+        );
+    }
+
+
+    // ======================================
+    // LÍNEA OBJETIVO 3 °C
+    // ======================================
+
+    const yObjetivo =
+        y(3);
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        margenIzq,
+        yObjetivo
+    );
+
+    ctx.lineTo(
+        w - margenDer,
+        yObjetivo
+    );
+
+    ctx.strokeStyle =
+        "#2878d0";
+
+    ctx.lineWidth = 1.5;
+
+    ctx.setLineDash([
+        6,
+        4
+    ]);
+
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+
+
+    // ======================================
+    // LÍNEA DE TEMPERATURA
+    // ======================================
+
+    ctx.beginPath();
+
+    datos.forEach(
+        (dato, i) => {
+
+            const xx =
+                x(i);
+
+            const yy =
+                y(dato.temperatura);
+
+            if (i === 0) {
+
+                ctx.moveTo(
+                    xx,
+                    yy
+                );
+
+            } else {
+
+                ctx.lineTo(
+                    xx,
+                    yy
+                );
+            }
+        }
+    );
+
+    ctx.strokeStyle =
+        "#2878d0";
+
+    ctx.lineWidth = 2;
+
+    ctx.stroke();
+
+
+    // ======================================
+    // PUNTOS
+    // ======================================
+
+    datos.forEach(
+        (dato, i) => {
+
+            const xx =
+                x(i);
+
+            const yy =
+                y(dato.temperatura);
+
+            const correcto =
+                dato.temperatura >= 0 &&
+                dato.temperatura <= 5;
+
+            ctx.beginPath();
+
+            ctx.arc(
+                xx,
+                yy,
+                3.5,
+                0,
+                Math.PI * 2
+            );
+
+            ctx.fillStyle =
+                correcto
+                    ? "#18a957"
+                    : "#e32626";
+
+            ctx.fill();
+        }
+    );
+}
+
 function finalizarControlRefrigeracion() {
 
     const control = window.controlRefrigeracion;
@@ -3388,12 +4075,52 @@ function iniciarControlCalidadAutomatico() {
     const cantidadTotal =
         Number(window.loteProcesoSeleccionado.cantidadMedallones) || 0;
 
+    // ==========================================
+// VELOCIDAD DEL CONTROL DE CALIDAD
+// ==========================================
+
+const modoRapido =
+    cantidadTotal > 30;
+
+window.velocidadCalidad = {
+
+    rapido: modoRapido,
+
+    // Tiempo para obtener el pesaje
+    medicion:
+        modoRapido ? 30 : 200,
+
+    // Pausa entre medallones
+    siguiente:
+        modoRapido ? 20 : 100,
+
+    // Tiempos de reproceso
+    ajuste:
+        modoRapido ? 40 : 200,
+
+    reformado:
+        modoRapido ? 150 : 1800,
+
+    nuevoPesaje:
+        modoRapido ? 250 : 2600,
+
+    resultado:
+        modoRapido ? 80 : 1200
+};
+
     window.controlCalidad = {
-        actual: 0,
-        total: cantidadTotal,
-        historial: [],
-        procesando: false
-    };
+    actual: 0,
+    total: cantidadTotal,
+
+    historial: [],
+    pesosGrafica: [],
+
+    // Indicadores HMI
+    aceptadosFinales: 0,
+    reprocesados: 0,
+
+    procesando: false
+};
 
     procesarSiguienteMedallonCalidad();
 }
@@ -3568,10 +4295,29 @@ function procesarSiguienteMedallonCalidad() {
 
     setTimeout(() => {
 
-        const peso =
-            Number(
-                (97 + Math.random() * 6).toFixed(1)
-            );
+        let peso;
+
+if (Math.random() < 0.85) {
+
+    // 85 % de los medallones quedan dentro del rango
+    peso = Number(
+        (98 + Math.random() * 5).toFixed(1)
+    );
+
+} else {
+
+    // 15 % quedan fuera del rango
+    peso = Number(
+        (97 + Math.random() * 9).toFixed(1)
+    );
+}
+
+            control.pesosGrafica.push({
+    numero: numeroMedallon,
+    peso: peso
+});
+
+actualizarGraficaPesoCalidad();
 
         pesoElemento.textContent =
             `${peso.toFixed(1)} g`;
@@ -3595,9 +4341,326 @@ function procesarSiguienteMedallonCalidad() {
 
         }
 
-    }, 200);
+    }, window.velocidadCalidad?.medicion || 200);
 }
 
+function actualizarGraficaPesoCalidad() {
+
+    const canvas = document.getElementById("grafica-peso-calidad");
+    const control = window.controlCalidad;
+
+    if (!canvas || !control) {
+        return;
+    }
+
+    const ctx = canvas.getContext("2d");
+
+    // Tamaño visual del canvas
+    const rect = canvas.getBoundingClientRect();
+
+    const dpr = window.devicePixelRatio || 1;
+
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const w = rect.width;
+    const h = rect.height;
+
+    ctx.clearRect(0, 0, w, h);
+
+    const datos = control.pesosGrafica || [];
+
+    if (datos.length === 0) {
+        return;
+    }
+
+    // ==========================================
+    // CONFIGURACIÓN DE LA GRÁFICA
+    // ==========================================
+
+    const margenIzquierdo = 45;
+    const margenDerecho = 20;
+    const margenSuperior = 20;
+    const margenInferior = 35;
+
+    const graficaW =
+        w - margenIzquierdo - margenDerecho;
+
+    const graficaH =
+        h - margenSuperior - margenInferior;
+
+    const minPeso = 96;
+    const maxPeso = 104;
+
+    // ==========================================
+    // CONVERSIÓN DE COORDENADAS
+    // ==========================================
+
+    function convertirX(i) {
+
+        if (datos.length === 1) {
+            return margenIzquierdo + graficaW / 2;
+        }
+
+        return margenIzquierdo +
+            (i / (datos.length - 1)) * graficaW;
+    }
+
+    function convertirY(peso) {
+
+        return margenSuperior +
+            ((maxPeso - peso) /
+            (maxPeso - minPeso)) *
+            graficaH;
+    }
+
+    // ==========================================
+    // FONDO
+    // ==========================================
+
+    ctx.fillStyle = "#ffffff";
+
+    ctx.fillRect(
+        margenIzquierdo,
+        margenSuperior,
+        graficaW,
+        graficaH
+    );
+
+    // ==========================================
+    // CUADRÍCULA
+    // ==========================================
+
+    ctx.font = "10px Arial";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+
+    for (let peso = 96; peso <= 104; peso += 1) {
+
+        const y = convertirY(peso);
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            margenIzquierdo,
+            y
+        );
+
+        ctx.lineTo(
+            w - margenDerecho,
+            y
+        );
+
+        ctx.strokeStyle =
+            peso === 100
+                ? "#b8b8b8"
+                : "#e8e8e8";
+
+        ctx.lineWidth =
+            peso === 100 ? 1.5 : 1;
+
+        ctx.stroke();
+
+        // Etiqueta del eje Y
+        ctx.fillStyle = "#666";
+
+        ctx.fillText(
+            `${peso}`,
+            margenIzquierdo - 8,
+            y
+        );
+    }
+
+    // ==========================================
+    // ZONA ACEPTABLE 98 - 102 g
+    // ==========================================
+
+    const y102 = convertirY(102);
+    const y98 = convertirY(98);
+
+    ctx.fillStyle = "rgba(24, 169, 87, 0.06)";
+
+    ctx.fillRect(
+        margenIzquierdo,
+        y102,
+        graficaW,
+        y98 - y102
+    );
+
+    // ==========================================
+    // LÍNEA OBJETIVO 100 g
+    // ==========================================
+
+    const y100 = convertirY(100);
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        margenIzquierdo,
+        y100
+    );
+
+    ctx.lineTo(
+        w - margenDerecho,
+        y100
+    );
+
+    ctx.strokeStyle = "#555";
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 4]);
+
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+
+    // ==========================================
+    // LÍMITES 98 Y 102
+    // ==========================================
+
+    [98, 102].forEach(peso => {
+
+        const y = convertirY(peso);
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            margenIzquierdo,
+            y
+        );
+
+        ctx.lineTo(
+            w - margenDerecho,
+            y
+        );
+
+        ctx.strokeStyle = "#d8d8d8";
+        ctx.lineWidth = 1;
+
+        ctx.setLineDash([3, 3]);
+
+        ctx.stroke();
+
+        ctx.setLineDash([]);
+    });
+
+    // ==========================================
+    // EJE X
+    // ==========================================
+
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+
+    const cantidadEtiquetas =
+        Math.min(datos.length, 10);
+
+    const paso =
+        Math.max(
+            1,
+            Math.ceil(
+                datos.length / cantidadEtiquetas
+            )
+        );
+
+    for (
+        let i = 0;
+        i < datos.length;
+        i += paso
+    ) {
+
+        const x = convertirX(i);
+
+        ctx.fillStyle = "#666";
+
+        ctx.fillText(
+            `${datos[i].numero}`,
+            x,
+            h - margenInferior + 10
+        );
+    }
+
+    // ==========================================
+    // LÍNEA DE TENDENCIA
+    // ==========================================
+
+    if (datos.length > 1) {
+
+        ctx.beginPath();
+
+        datos.forEach((dato, i) => {
+
+            const x = convertirX(i);
+            const y = convertirY(dato.peso);
+
+            if (i === 0) {
+
+                ctx.moveTo(x, y);
+
+            } else {
+
+                ctx.lineTo(x, y);
+
+            }
+
+        });
+
+        ctx.strokeStyle = "#2878d0";
+        ctx.lineWidth = 2;
+
+        ctx.stroke();
+    }
+
+    // ==========================================
+    // PUNTOS
+    // ==========================================
+
+    datos.forEach((dato, i) => {
+
+        const x = convertirX(i);
+        const y = convertirY(dato.peso);
+
+        const aceptado =
+            dato.peso >= 98 &&
+            dato.peso <= 102;
+
+        ctx.beginPath();
+
+        ctx.arc(
+            x,
+            y,
+            4,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fillStyle =
+            aceptado
+                ? "#18a957"
+                : "#e32626";
+
+        ctx.fill();
+
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 1.5;
+
+        ctx.stroke();
+    });
+
+    // ==========================================
+    // BORDE
+    // ==========================================
+
+    ctx.strokeStyle = "#dddddd";
+    ctx.lineWidth = 1;
+
+    ctx.strokeRect(
+        margenIzquierdo,
+        margenSuperior,
+        graficaW,
+        graficaH
+    );
+}
 
 function aceptarMedallonCalidad(numero, peso) {
 
@@ -3627,12 +4690,17 @@ function aceptarMedallonCalidad(numero, peso) {
     `;
 
     control.historial.unshift({
-        numero,
-        peso,
-        estado: "Aceptado"
-    });
+    numero,
+    peso,
+    estado: "Aceptado"
+});
 
-    actualizarHistorialCalidad();
+// Registrar aceptación final
+control.aceptadosFinales++;
+
+actualizarHistorialCalidad();
+
+actualizarIndicadoresHMI();
 
     const porcentaje =
     (numero / control.total) * 100;
@@ -3654,7 +4722,7 @@ setTimeout(() => {
 
     procesarSiguienteMedallonCalidad();
 
-}, 100);
+}, window.velocidadCalidad?.siguiente || 100);
 }
 
 
@@ -3683,13 +4751,17 @@ function rechazarMedallonCalidad(numero, peso) {
     `;
 
     control.historial.unshift({
-        numero,
-        peso,
-        estado: "Rechazado"
-    });
+    numero,
+    peso,
+    estado: "Rechazado"
+});
 
-    actualizarHistorialCalidad();
+// Registrar que este medallón necesitó reproceso
+control.reprocesados++;
 
+actualizarHistorialCalidad();
+
+actualizarIndicadoresHMI();
     setTimeout(() => {
 
         accionElemento.textContent =
@@ -3700,7 +4772,7 @@ function rechazarMedallonCalidad(numero, peso) {
             <span>Corrigiendo el medallón antes de reformar.</span>
         `;
 
-    }, 200);
+    }, window.velocidadCalidad?.ajuste || 200);
 
     setTimeout(() => {
 
@@ -3712,7 +4784,7 @@ function rechazarMedallonCalidad(numero, peso) {
             <span>El medallón volverá al proceso de formado.</span>
         `;
 
-    }, 1800);
+    }, window.velocidadCalidad?.reformado || 1800);
 
     setTimeout(() => {
 
@@ -3736,14 +4808,14 @@ function rechazarMedallonCalidad(numero, peso) {
 
         setTimeout(() => {
 
-            aceptarMedallonCalidad(
-                numero,
-                nuevoPeso
-            );
+    aceptarMedallonCalidad(
+        numero,
+        nuevoPeso
+    );
 
-        }, 1200);
+}, window.velocidadCalidad?.resultado || 1200);
 
-    }, 2600);
+    }, window.velocidadCalidad?.nuevoPesaje || 2600);
 }
 
 
@@ -3784,6 +4856,132 @@ function actualizarHistorialCalidad() {
 
         }).join("");
 }
+
+function actualizarIndicadoresHMI() {
+
+    const control = window.controlCalidad;
+
+    if (!control) {
+        return;
+    }
+
+    const aceptados =
+        control.aceptadosFinales || 0;
+
+    const reprocesados =
+        control.reprocesados || 0;
+
+    // Medallones que ya terminaron su ciclo
+    const procesados =
+        aceptados;
+
+
+    // ==========================================
+    // CALIDAD FINAL
+    // ==========================================
+
+    const aceptadosPrimera =
+    Math.max(
+        0,
+        control.total - reprocesados
+    );
+
+const calidad =
+    control.total > 0
+        ? (aceptadosPrimera / control.total) * 100
+        : 0;
+
+
+    // ==========================================
+    // PESO PROMEDIO
+    // ==========================================
+
+    const pesos =
+        control.pesosGrafica || [];
+
+    let pesoPromedio = 0;
+
+    if (pesos.length > 0) {
+
+        const suma =
+            pesos.reduce(
+                (total, dato) =>
+                    total + Number(dato.peso),
+                0
+            );
+
+        pesoPromedio =
+            suma / pesos.length;
+    }
+
+
+    // ==========================================
+    // ACEPTADOS
+    // ==========================================
+
+    const aceptadosElemento =
+        document.getElementById(
+            "indicador-aceptados"
+        );
+
+    if (aceptadosElemento) {
+
+        aceptadosElemento.textContent =
+            aceptados;
+    }
+
+
+    // ==========================================
+    // REPROCESADOS
+    // ==========================================
+
+    const reprocesadosElemento =
+        document.getElementById(
+            "indicador-rechazados"
+        );
+
+    if (reprocesadosElemento) {
+
+        reprocesadosElemento.textContent =
+            reprocesados;
+    }
+
+
+    // ==========================================
+    // CALIDAD
+    // ==========================================
+
+    const calidadElemento =
+        document.getElementById(
+            "indicador-calidad"
+        );
+
+    if (calidadElemento) {
+
+        calidadElemento.textContent =
+            `${calidad.toFixed(1)} %`;
+    }
+
+
+    // ==========================================
+    // PESO PROMEDIO
+    // ==========================================
+
+    const promedioElemento =
+        document.getElementById(
+            "indicador-peso-promedio"
+        );
+
+    if (promedioElemento) {
+
+        promedioElemento.textContent =
+            pesos.length > 0
+                ? `${pesoPromedio.toFixed(1)} g`
+                : "--.- g";
+    }
+
+}
+
 // ==========================================
 // ELIMINAR PEDIDO
 // ==========================================

@@ -7009,6 +7009,282 @@ footer p {
     }
 }
 /* =========================================================
+   HMI - MONITOREO DEL PESO
+   ========================================================= */
+
+.hmi-calidad {
+    display: grid;
+    grid-template-columns: 1.7fr 1fr;
+    gap: 15px;
+    margin-top: 18px;
+}
+
+
+/* GRÁFICA */
+
+.grafica-peso-calidad {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 11px;
+    padding: 16px;
+}
+
+.titulo-grafica {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.titulo-grafica strong {
+    display: block;
+    color: #374151;
+    font-size: 14px;
+}
+
+.titulo-grafica span {
+    display: block;
+    margin-top: 3px;
+    color: #9ca3af;
+    font-size: 11px;
+}
+
+.referencia-peso {
+    text-align: right;
+    color: #9ca3af;
+    font-size: 10px;
+}
+
+.referencia-peso strong {
+    display: block;
+    color: #111827;
+    font-size: 15px;
+    margin-top: 2px;
+}
+
+.grafica-contenedor {
+    width: 100%;
+    height: 235px;
+    background: #fafafa;
+    border: 1px solid #edf0f2;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+#grafica-peso-svg {
+    width: 100%;
+    height: 100%;
+}
+
+.linea-grafica {
+    stroke: #e5e7eb;
+    stroke-width: 1;
+}
+
+.limite-grafica {
+    stroke: #d62828;
+    stroke-width: 1;
+    stroke-dasharray: 5 5;
+    opacity: 0.55;
+}
+
+.objetivo-grafica {
+    stroke: #16803c;
+    stroke-width: 1.5;
+    stroke-dasharray: 6 4;
+}
+
+.etiqueta-grafica {
+    fill: #9ca3af;
+    font-size: 12px;
+}
+
+.linea-tendencia {
+    fill: none;
+    stroke: #2563eb;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.punto-tendencia {
+    fill: #2563eb;
+    stroke: #ffffff;
+    stroke-width: 2;
+}
+
+.punto-tendencia.rechazado {
+    fill: #d62828;
+}
+
+.leyenda-grafica {
+    display: flex;
+    gap: 18px;
+    margin-top: 9px;
+    font-size: 11px;
+    color: #6b7280;
+}
+
+.punto-leyenda {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 4px;
+}
+
+.punto-leyenda.objetivo {
+    background: #16803c;
+}
+
+.punto-leyenda.limite {
+    background: #d62828;
+}
+
+
+/* ESTADO HMI */
+
+.estado-maquina-calidad {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 11px;
+    padding: 16px;
+}
+
+.titulo-panel-hmi {
+    color: #374151;
+    font-size: 14px;
+    font-weight: 700;
+    padding-bottom: 11px;
+    border-bottom: 1px solid #edf0f2;
+    margin-bottom: 5px;
+}
+
+.indicador-hmi {
+    display: grid;
+    grid-template-columns: 10px 1fr auto;
+    align-items: center;
+    gap: 9px;
+    padding: 13px 2px;
+    border-bottom: 1px solid #f0f1f2;
+}
+
+.indicador-hmi:last-child {
+    border-bottom: none;
+}
+
+.led-hmi {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #9ca3af;
+}
+
+.led-hmi.activo {
+    background: #19a463;
+    box-shadow: 0 0 0 3px #e8f7ee;
+}
+
+.indicador-hmi strong {
+    display: block;
+    color: #374151;
+    font-size: 12px;
+}
+
+.indicador-hmi small {
+    display: block;
+    color: #9ca3af;
+    font-size: 10px;
+    margin-top: 2px;
+}
+
+.indicador-hmi b {
+    color: #16803c;
+    font-size: 10px;
+}
+
+
+/* INDICADORES DE CALIDAD */
+
+.resumen-calidad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.indicador-calidad {
+    padding: 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #fafafa;
+}
+
+.indicador-calidad span {
+    display: block;
+    color: #6b7280;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.indicador-calidad strong {
+    display: block;
+    color: #111827;
+    font-size: 25px;
+    margin-top: 4px;
+}
+
+.indicador-calidad small {
+    color: #9ca3af;
+    font-size: 10px;
+}
+
+.indicador-calidad.aceptados strong {
+    color: #16803c;
+}
+
+.indicador-calidad.rechazados strong {
+    color: #d62828;
+}
+
+.indicador-calidad.rendimiento strong {
+    color: #2563eb;
+}
+
+
+/* RESPONSIVE */
+
+@media (max-width: 900px) {
+
+    .hmi-calidad {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+@media (max-width: 600px) {
+
+    .resumen-calidad {
+        grid-template-columns: 1fr;
+    }
+
+    .titulo-grafica {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 7px;
+    }
+
+    .referencia-peso {
+        text-align: left;
+    }
+
+    .leyenda-grafica {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+}
+/* =========================================================
    CONTROL DE REFRIGERACIÓN
    ========================================================= */
 
@@ -8146,4 +8422,663 @@ footer p {
     gap: 20px;
 
     margin-top: 10px;
+}
+
+.grafica-peso-calidad {
+    margin-top: 12px;
+    border: 1px solid #dfe3e8;
+    border-radius: 10px;
+    padding: 14px;
+    background: #ffffff;
+}
+
+.titulo-grafica-calidad {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.titulo-grafica-calidad > div:first-child {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.titulo-grafica-calidad strong {
+    font-size: 14px;
+}
+
+.titulo-grafica-calidad span {
+    font-size: 11px;
+    color: #777;
+}
+
+.leyenda-grafica {
+    display: flex;
+    gap: 12px;
+    font-size: 10px;
+    color: #666;
+}
+
+.grafica-contenedor {
+    width: 100%;
+    height: 220px;
+    position: relative;
+}
+
+#grafica-peso-calidad {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+/* ==========================================
+   INDICADORES HMI - CONTROL DE CALIDAD
+   ========================================== */
+
+.indicadores-hmi-calidad {
+    display: grid;
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap: 10px;
+
+    margin-top: 14px;
+}
+
+
+.indicador-hmi {
+    background: #f8f9fa;
+
+    border: 1px solid #dfe3e8;
+
+    border-radius: 8px;
+
+    padding: 14px 12px;
+
+    text-align: center;
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: center;
+
+    min-height: 105px;
+}
+
+
+.indicador-hmi-titulo {
+    font-size: 11px;
+
+    color: #666;
+
+    margin-bottom: 6px;
+}
+
+
+.indicador-hmi strong {
+    font-size: 28px;
+
+    line-height: 1.1;
+
+    margin-bottom: 5px;
+}
+
+
+.indicador-hmi small {
+    font-size: 10px;
+
+    color: #777;
+}
+
+
+/* Aceptados */
+
+.indicador-hmi.aceptados {
+    border-top: 3px solid #18a957;
+}
+
+.indicador-hmi.aceptados strong {
+    color: #18a957;
+}
+
+
+/* Rechazados */
+
+.indicador-hmi.rechazados {
+    border-top: 3px solid #e32626;
+}
+
+.indicador-hmi.rechazados strong {
+    color: #e32626;
+}
+
+
+/* Calidad */
+
+.indicador-hmi.calidad {
+    border-top: 3px solid #2878d0;
+}
+
+.indicador-hmi.calidad strong {
+    color: #2878d0;
+}
+
+
+/* Peso promedio */
+
+.indicador-hmi.promedio {
+    border-top: 3px solid #555;
+}
+
+.indicador-hmi.promedio strong {
+    color: #333;
+}
+
+
+/* Responsive */
+
+@media (max-width: 800px) {
+
+    .indicadores-hmi-calidad {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
+}
+
+
+@media (max-width: 500px) {
+
+    .indicadores-hmi-calidad {
+        grid-template-columns:
+            1fr;
+    }
+
+}
+/* ==========================================
+   INDICADORES HMI - REFRIGERACIÓN
+   ========================================== */
+
+.indicadores-hmi-refrigeracion {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 14px;
+    margin-bottom: 14px;
+}
+
+.indicador-frio {
+    background: #f7f8fa;
+    border: 1px solid #dfe3e8;
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+    min-height: 72px;
+    box-sizing: border-box;
+}
+
+.indicador-frio span {
+    display: block;
+    font-size: 11px;
+    color: #596579;
+    margin-bottom: 5px;
+}
+
+.indicador-frio strong {
+    display: block;
+    font-size: 14px;
+    color: #1f2937;
+    margin-bottom: 4px;
+}
+
+.indicador-frio small {
+    display: block;
+    font-size: 9px;
+    color: #7a8494;
+}
+/* =====================================================
+   HMI DINÁMICA - CONTROL DE REFRIGERACIÓN
+   ===================================================== */
+
+
+/* -----------------------------------------
+   INDICADORES HMI
+   ----------------------------------------- */
+
+.indicador-frio {
+
+    transition:
+        background 0.3s ease,
+        border 0.3s ease,
+        box-shadow 0.3s ease,
+        transform 0.3s ease;
+
+}
+
+
+/* Estado normal de temperatura */
+
+.indicador-frio.temperatura-ok {
+
+    background: #ecfdf3;
+
+    border: 1px solid #86efac;
+
+}
+
+.indicador-frio.temperatura-ok strong {
+
+    color: #16a34a;
+
+}
+
+
+/* Temperatura fuera de rango */
+
+.indicador-frio.temperatura-alerta {
+
+    background: #fff7ed;
+
+    border: 1px solid #fb923c;
+
+}
+
+.indicador-frio.temperatura-alerta strong {
+
+    color: #ea580c;
+
+}
+
+
+/* -----------------------------------------
+   ALARMA ACTIVA
+   ----------------------------------------- */
+
+.indicador-frio.alarma-activa {
+
+    background: #fee2e2;
+
+    border: 2px solid #ef4444;
+
+    box-shadow:
+        0 0 0 3px rgba(239, 68, 68, 0.12),
+        0 0 18px rgba(239, 68, 68, 0.35);
+
+    animation:
+        alarmaParpadeo 0.8s ease-in-out infinite;
+
+}
+
+
+/* Número de alarma */
+
+.indicador-frio.alarma-activa strong {
+
+    color: #dc2626;
+
+    font-size: 20px;
+
+}
+
+
+/* Animación de alarma */
+
+@keyframes alarmaParpadeo {
+
+    0% {
+
+        opacity: 1;
+
+        transform: scale(1);
+
+    }
+
+    50% {
+
+        opacity: 0.65;
+
+        transform: scale(1.02);
+
+    }
+
+    100% {
+
+        opacity: 1;
+
+        transform: scale(1);
+
+    }
+
+}
+
+
+/* -----------------------------------------
+   TEMPERATURA DIGITAL
+   ----------------------------------------- */
+
+.temperatura-digital {
+
+    transition:
+        color 0.3s ease,
+        transform 0.3s ease;
+
+}
+
+
+/* Temperatura normal */
+
+.temperatura-digital:not(
+    .temperatura-en-alarma
+) {
+
+    color: #2563eb;
+
+}
+
+
+/* Temperatura en alarma */
+
+.temperatura-digital.temperatura-en-alarma {
+
+    color: #dc2626;
+
+    animation:
+        temperaturaAlarma 0.7s ease-in-out infinite;
+
+}
+
+
+/* Parpadeo de temperatura */
+
+@keyframes temperaturaAlarma {
+
+    0% {
+
+        transform: scale(1);
+
+    }
+
+    50% {
+
+        transform: scale(1.05);
+
+    }
+
+    100% {
+
+        transform: scale(1);
+
+    }
+
+}
+
+
+/* -----------------------------------------
+   ESTADO GENERAL
+   ----------------------------------------- */
+
+.estado-general-refrigeracion {
+
+    transition:
+        background 0.3s ease,
+        border 0.3s ease;
+
+}
+
+
+/* -----------------------------------------
+   HISTORIAL
+   ----------------------------------------- */
+
+.fila-temperatura {
+
+    transition:
+        background 0.25s ease;
+
+}
+
+.fila-temperatura:hover {
+
+    background: #f1f5f9;
+
+}
+
+
+/* -----------------------------------------
+   ICONO DE REFRIGERACIÓN
+   ----------------------------------------- */
+
+.icono-temperatura {
+
+    color: #2563eb;
+
+    animation:
+        movimientoFrio 2s ease-in-out infinite;
+
+}
+
+
+@keyframes movimientoFrio {
+
+    0% {
+
+        transform: translateY(0);
+
+    }
+
+    50% {
+
+        transform: translateY(-3px);
+
+    }
+
+    100% {
+
+        transform: translateY(0);
+
+    }
+
+}
+
+
+/* -----------------------------------------
+   MODO AUTOMÁTICO
+   ----------------------------------------- */
+
+.modo-automatico {
+
+    background: #dcfce7 !important;
+
+    color: #15803d !important;
+
+    border: 1px solid #86efac;
+
+    font-weight: 700;
+
+}
+
+/* ==========================================
+   ESTADO GENERAL DE REFRIGERACIÓN
+   ========================================== */
+
+.estado-general-refrigeracion {
+
+    transition:
+        background 0.3s ease,
+        border 0.3s ease,
+        box-shadow 0.3s ease;
+
+}
+
+
+/* Sistema funcionando correctamente */
+
+.estado-general-refrigeracion.estado-ok {
+
+    background: #ecfdf5;
+
+    border-left: 4px solid #22c55e;
+
+}
+
+.estado-general-refrigeracion.estado-ok strong {
+
+    color: #15803d;
+
+}
+
+
+/* Alarma de temperatura */
+
+.estado-general-refrigeracion.estado-alarma {
+
+    background: #fee2e2;
+
+    border-left: 4px solid #ef4444;
+
+    box-shadow:
+        0 0 15px rgba(239, 68, 68, 0.20);
+
+    animation:
+        alarmaEstado 0.9s ease-in-out infinite;
+
+}
+
+.estado-general-refrigeracion.estado-alarma strong {
+
+    color: #dc2626;
+
+}
+
+
+/* Parpadeo suave */
+
+@keyframes alarmaEstado {
+
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.75;
+    }
+
+    100% {
+        opacity: 1;
+    }
+
+}
+
+/* ==========================================
+   GRÁFICA DE REFRIGERACIÓN
+   ========================================== */
+
+.grafica-refrigeracion {
+
+    margin-top: 22px;
+
+    padding: 18px;
+
+    background: #ffffff;
+
+    border: 1px solid #dbe3ec;
+
+    border-radius: 10px;
+
+}
+
+
+.titulo-grafica {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    margin-bottom: 12px;
+
+}
+
+
+.titulo-grafica h4 {
+
+    margin: 0;
+
+    font-size: 15px;
+
+    color: #172033;
+
+}
+
+
+.titulo-grafica span {
+
+    font-size: 11px;
+
+    color: #64748b;
+
+}
+
+
+.leyenda-grafica {
+
+    display: flex;
+
+    gap: 15px;
+
+    align-items: center;
+
+}
+
+
+.leyenda-grafica span {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 5px;
+
+}
+
+
+.punto-temperatura,
+.punto-objetivo {
+
+    width: 9px;
+
+    height: 9px;
+
+    display: inline-block;
+
+    border-radius: 50%;
+
+}
+
+
+.punto-temperatura {
+
+    background: #2878d0;
+
+}
+
+
+.punto-objetivo {
+
+    background: #22c55e;
+
+}
+
+
+#grafica-temperatura-refrigeracion {
+
+    width: 100%;
+
+    height: 260px;
+
+    display: block;
+
 }
